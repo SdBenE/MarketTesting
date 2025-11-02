@@ -6,6 +6,3 @@ import matplotlib.pyplot as plt
 import os
 import dataFinder
 import tensorflow as tf
-
-def reFormat(dataset):
-    
