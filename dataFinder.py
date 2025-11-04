@@ -3,7 +3,7 @@ import yfinance as yf
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
-#import tensorflow as tf
+import tensorflow as tf
 import numpy as np
 
 def createData():
