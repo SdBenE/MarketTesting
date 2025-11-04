@@ -7,7 +7,11 @@ name = "markettesting"
 version = "0.0.1"
 description = "My market testing tools"
 requires-python = ">=3.8"
-dependencies = []
+dependencies = [
+    "pandas>=1.0.0"
+    "tensorflow>=2.20.0"
+    "yifinance>=0.2.66"
+]
 
 [tool.setuptools]
 package-dir = {"" = "src"}

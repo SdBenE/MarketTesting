@@ -1,0 +1,1 @@
+This is a Market Testing code that utilizes Tensorflow in order to develop predicitions of the stock market

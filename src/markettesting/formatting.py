@@ -4,5 +4,5 @@ import csv
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
-import src.dataFinder as dataFinder
+import dataFinder
 import tensorflow as tf
