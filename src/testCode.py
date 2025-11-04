@@ -4,9 +4,9 @@ import csv
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
-import dataFinder
+import src.dataFinder as dataFinder
 import tensorflow as tf
-import formatting
+import src.formatting as formatting
 
 #dataFinder.createData()
 myData = dataFinder.parseData('AAPL')
