@@ -8,9 +8,15 @@ import dataFinder
 import tensorflow as tf
 import formatting
 
-#dataFinder.createData()
+dataFinder.createData()
 myData = dataFinder.parseData('AAPL')
 
-dataset = tf.data.Dataset.from_tensor_slices(myData)
+dataset = tf.data.Dataset.from_tensors(myData)
 
-print(myData)
+formatting.graphData('AAPL')
+
+print("\n")
+
+print(f"NP DATASET: {myData}\n")
+
+print(f"TF DATASET: {dataset}")

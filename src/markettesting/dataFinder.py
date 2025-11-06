@@ -7,13 +7,17 @@ import tensorflow as tf
 import numpy as np
 
 def createData():
-    myData = pd.read_csv('tickers.csv')
+    myData = pd.read_csv('MarketTesting/src/markettesting/tickers.csv')
 
     dataList = myData['Symbol']
     for symbol in dataList: #The entire NASDAQ in the palm of my hand
             if not os.path.exists(f'{symbol}.csv'):
                 myTicker = yf.download(symbol, start='2021-01-01', end='2025-06-01')
-                myTicker.to_csv(f"dataFolder/{symbol}.csv", index=False)
+                print(myTicker.head())
+                myTicker.to_csv(f"MarketTesting/src/markettesting/dataFolder/{symbol}.csv", index=False)
 
 def parseData(tickerName):
-     return np.genfromtxt(f"dataFolder/{tickerName}.csv", delimiter=',', dtype=None, encoding=None)
+    array = np.genfromtxt(f"MarketTesting/src/markettesting/dataFolder/{tickerName}.csv", delimiter=',', dtype=None, encoding=None)
+    array = array[2:]
+    # print(array)
+    return array
