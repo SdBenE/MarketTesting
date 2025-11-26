@@ -7,16 +7,28 @@ import os
 import dataFinder
 import tensorflow as tf
 import formatting
+import modelCreation
+from keras.models import Sequential
+from keras.layers import LSTM, Dense, Dropout
+import warnings
 
-dataFinder.createData()
-myData = dataFinder.parseData('AAPL')
+warnings.filterwarnings('ignore')
 
-dataset = tf.data.Dataset.from_tensors(myData)
+# dataFinder.createData('2021-01-01', '2025-01-01')
+# myData = dataFinder.parseData('AAPL')
 
-formatting.graphData('AAPL')
+# formatting.graphData('ADP')
+# formatting.graphData('AAPL')
 
-print("\n")
+# print("\n")
 
-print(f"NP DATASET: {myData}\n")
+print(tf.__version__)
 
-print(f"TF DATASET: {dataset}")
+myModel = modelCreation.LTSMModel(epochs=50, units=100)
+myModel.createModel(durationYears=4)
+myModel.trainModel()
+
+
+# print(f"NP DATASET: {myData}\n")
+
+# print(f"TF DATASET: {dataset}")

@@ -6,15 +6,17 @@ import os
 import tensorflow as tf
 import numpy as np
 
-def createData():
+def createData(startDate, endDate):
     myData = pd.read_csv('MarketTesting/src/markettesting/tickers.csv')
+
+    
 
     dataList = myData['Symbol']
     for symbol in dataList: #The entire NASDAQ in the palm of my hand
             if not os.path.exists(f'{symbol}.csv'):
-                myTicker = yf.download(symbol, start='2021-01-01', end='2025-06-01')
+                myTicker = yf.download(symbol, start=startDate, end=endDate)
                 print(myTicker.head())
-                myTicker.to_csv(f"MarketTesting/src/markettesting/dataFolder/{symbol}.csv", index=False)
+                myTicker.to_csv(f"MarketTesting/src/markettesting/dataFolder/{symbol}.csv", index=True)
 
 def parseData(tickerName):
     array = np.genfromtxt(f"MarketTesting/src/markettesting/dataFolder/{tickerName}.csv", delimiter=',', dtype=None, encoding=None)
