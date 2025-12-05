@@ -23,4 +23,32 @@ def graphData(tickerName):
 
     
     plt.show()
+
+def fileFormation(periodYears=1):
+    dataList = pd.read_csv('MarketTesting/src/markettesting/tickers.csv')
+    tempDataList = dataList
+    print(dataList)
+    symbols = dataList['Symbol']
+
+
+    duration = f"{periodYears}y"
+
+    # emptyTickers = []
+
+    for ticker in symbols:
+        myTicker = yf.download(ticker, period=duration)
+        # myTicker.columns = [None] * len(myTicker.columns)
+
+        print(f"      CURRENT TICKER {ticker}")
+
+        if myTicker.empty or len(myTicker) < 10:
+            print(f"[[{ticker}]] : TOOOOOO SMALLLLLLLL BYE BYE")
+            # emptyTickers.append(ticker)
+
+            dropIndex = tempDataList[dataList['Symbol'] == ticker].index
+            tempDataList = tempDataList.drop(dropIndex)
+
+        # print(emptyTickers)
+        print(f"Datalist Length: {len(tempDataList)}")
+        # print(tempDataList)
     

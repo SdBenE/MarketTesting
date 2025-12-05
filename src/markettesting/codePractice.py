@@ -24,10 +24,11 @@ warnings.filterwarnings('ignore')
 
 print(tf.__version__)
 
-myModel = modelCreation.LTSMModel(epochs=50, units=100)
-myModel.createModel(durationYears=4)
-myModel.trainModel()
+# myModel = modelCreation.LTSMModel(epochs=50, units=100)
+# myModel.createModel(durationYears=4)
+# myModel.trainModel()
 
+formatting.fileFormation(4)
 
 # print(f"NP DATASET: {myData}\n")
 

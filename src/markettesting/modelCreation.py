@@ -24,7 +24,7 @@ class LTSMModel:
         self.sequenceLength = sequenceLength
 
         #Layer 1
-        self.model.add(LSTM(units=self.units, return_sequences=True, input_shape=(durationYears * 365, 1)))
+        self.model.add(LSTM(units=self.units, return_sequences=True, input_shape=(self.sequenceLength, 1)))
         self.model.add(Dropout(0.2))
 
         #Layer 2
@@ -57,28 +57,34 @@ class LTSMModel:
         for ticker in dataList:
             rawData = yf.download(ticker, period=self.timePeriod)
 
+            MIN_DATA_POINTS = self.sequenceLength + 10
+
+            if len(rawData['Close']) < MIN_DATA_POINTS or rawData.empty:
+                print("CATCH 0: SKipping...")
+                continue
+
             rawData.columns = rawData.columns.droplevel(level=1)
-            rawData = rawData[['Close', 'High', 'Low', 'Open', 'Volume']]
+            rawData = rawData[['Close','High', 'Low', 'Open', 'Volume']] #FIXME: Remove 'Adj'
             rawData.index.name = 'Date'
             rawData.index = pd.to_datetime(rawData.index)
 
             rawData['Close'] = pd.to_numeric(rawData['Close'], errors='coerce')
+
+            if rawData.empty:
+                print(f"Catch 1: Ticker {ticker} is empty Skipping...")
+                continue
+
             rawData.dropna(subset=['Close'], inplace=True)
 
             # print(rawData.head())
 
             # rawData['Date'] = pd.to_datetime(rawData['Date'])
             # rawData.set_index('Date', inplace=True)#FIXME: Error with "Date" column
-            MIN_DATA_POINTS = self.sequenceLength + 10
-
-            if len(rawData) == 0:
-                print(f"{ticker} is empty! Skipping...")
-                continue
             
             rawData.dropna(subset=['Close'], inplace=True)
 
-            if len(rawData) < MIN_DATA_POINTS:
-                print(f"{ticker} IS EMPTY: SKIPPING...")
+            if rawData.empty or len(rawData) < MIN_DATA_POINTS:
+                print(f"Catch 2: {ticker} IS EMPTY OR TOO SMALL: SKIPPING...")
                 continue
             else:
                 usedData = rawData['Close'].values
@@ -107,8 +113,12 @@ class LTSMModel:
                 testSeq, testTarget = self.dataSequence(testData)
 
                 unscaledTargets = usedData[indexCutoff:]
+                try:
+                    scaledPredictions = self.model.predict(testSeq, verbose=0)
+                except UnboundLocalError:
+                    print(f"Catch 3: Test sequence Invalid for ticker {ticker}, skipping...")
+                    continue
 
-                scaledPredictions = self.model.predict(testSeq, verbose=0)
                 fixedPredicts = scale.inverse_transform(scaledPredictions)
 
                 actualTargets = unscaledTargets.reshape(-1, 1)
