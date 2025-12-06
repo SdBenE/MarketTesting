@@ -1,5 +1,6 @@
 import yfinance as yf
 import csv
+import time
 #from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -56,6 +57,8 @@ class LTSMModel:
 
         for ticker in dataList:
             rawData = yf.download(ticker, period=self.timePeriod)
+
+
 
             MIN_DATA_POINTS = self.sequenceLength + 10
 

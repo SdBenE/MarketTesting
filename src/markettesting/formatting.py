@@ -8,6 +8,7 @@ import os
 import dataFinder
 import numpy as np
 import tensorflow as tf
+import time
 
 matplotlib.use('TkAgg')
 
@@ -36,10 +37,14 @@ def fileFormation(periodYears=1):
     # emptyTickers = []
 
     for ticker in symbols:
+        print(f"      CURRENT TICKER {ticker}      ")
+        
+        start = time.perf_counter()
+
         myTicker = yf.download(ticker, period=duration)
         # myTicker.columns = [None] * len(myTicker.columns)
 
-        print(f"      CURRENT TICKER {ticker}")
+        print(f"Download completed in {time.perf_counter() - start} [s]")
 
         if myTicker.empty or len(myTicker) < 10:
             print(f"[[{ticker}]] : TOOOOOO SMALLLLLLLL BYE BYE")
@@ -51,4 +56,3 @@ def fileFormation(periodYears=1):
         # print(emptyTickers)
         print(f"Datalist Length: {len(tempDataList)}")
         # print(tempDataList)
-    
