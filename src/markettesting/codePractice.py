@@ -8,11 +8,22 @@ import dataFinder
 import tensorflow as tf
 import formatting
 import modelCreation
+import frontend
 from keras.models import Sequential
 from keras.layers import LSTM, Dense, Dropout
 import warnings
 
 warnings.filterwarnings('ignore')
+
+frontend.intro()
+
+entry = input(f'<Entry> : ')
+
+while entry != 'exit' or entry != 'q' or entry != 'quit':
+    frontend.checkInput(entry)
+    entry = input(f'<Entry> : ')
+
+
 
 # dataFinder.createData('2021-01-01', '2025-01-01')
 # myData = dataFinder.parseData('AAPL')
@@ -22,13 +33,12 @@ warnings.filterwarnings('ignore')
 
 # print("\n")
 
-print(tf.__version__)
+
+# formatting.fileFormation(4)
 
 # myModel = modelCreation.LTSMModel(epochs=50, units=100)
 # myModel.createModel(durationYears=4)
 # myModel.trainModel()
-
-formatting.fileFormation(4)
 
 # print(f"NP DATASET: {myData}\n")
 

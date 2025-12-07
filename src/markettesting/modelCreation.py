@@ -9,7 +9,9 @@ import os
 import dataFinder
 import tensorflow as tf
 import formatting
-from keras.models import Sequential
+import keras
+from datetime import date
+from keras.models import Sequential, load_model
 from keras.layers import LSTM, Dense, Dropout
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_absolute_error
@@ -19,7 +21,30 @@ class LTSMModel:
         self.model = Sequential()
         self.epochs = epochs
         self.units = units
+        self.predictionTable = None
     
+    def predictions(self, date=date.today()):
+        # if self.tickerTable != None: #TODO: Uncomment this section once else statement is completed
+            
+        # else:
+            tickerList = pd.read_csv('/home/enjamin_lmore/tf-env/MarketTesting/src/markettesting/tickers.csv')
+            tickerList = tickerList['Symbol']
+            
+            self.predictionTable = pd.DataFrame()
+            self.predictionTable['Ticker'] = tickerList
+
+            print(self.predictionTable.head())
+
+
+            self.predictionTable[f'{date.month}-{date.day}-{date.year}'] = None
+            print(self.predictionTable.head())
+            # print(today)
+
+
+
+    def importModel(self):
+        self.model = load_model('/home/enjamin_lmore/tf-env/MarketTesting/src/markettesting/myModel.keras')
+
     def createModel(self, durationYears=1, sequenceLength=60):
         self.timePeriod = f"{durationYears}y"
         self.sequenceLength = sequenceLength
@@ -58,8 +83,6 @@ class LTSMModel:
         for ticker in dataList:
             rawData = yf.download(ticker, period=self.timePeriod)
 
-
-
             MIN_DATA_POINTS = self.sequenceLength + 10
 
             if len(rawData['Close']) < MIN_DATA_POINTS or rawData.empty:
@@ -67,7 +90,7 @@ class LTSMModel:
                 continue
 
             rawData.columns = rawData.columns.droplevel(level=1)
-            rawData = rawData[['Close','High', 'Low', 'Open', 'Volume']] #FIXME: Remove 'Adj'
+            rawData = rawData[['Close','High', 'Low', 'Open', 'Volume']]
             rawData.index.name = 'Date'
             rawData.index = pd.to_datetime(rawData.index)
 
@@ -132,6 +155,3 @@ class LTSMModel:
                 print(f"MEAN ABSOLUTE ERROR FROM {ticker}: ${mae}")
 
                 self.model.save('/home/enjamin_lmore/tf-env/MarketTesting/src/markettesting/myModel.keras')
-
-
-

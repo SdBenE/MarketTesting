@@ -40,7 +40,7 @@ def fileFormation(periodYears=1):
         print(f"      CURRENT TICKER {ticker}      ")
         
         start = time.perf_counter()
-
+        
         myTicker = yf.download(ticker, period=duration)
         # myTicker.columns = [None] * len(myTicker.columns)
 
@@ -56,3 +56,5 @@ def fileFormation(periodYears=1):
         # print(emptyTickers)
         print(f"Datalist Length: {len(tempDataList)}")
         # print(tempDataList)
+    
+    tempDataList.to_csv('/home/enjamin_lmore/tf-env/MarketTesting/src/markettesting/tickers.csv')
