@@ -17,11 +17,13 @@ warnings.filterwarnings('ignore')
 
 frontend.intro()
 
-entry = input(f'<Entry> : ')
+# formatting.fileFormation(periodYears=4, downLoad=True)
 
-while entry != 'exit' or entry != 'q' or entry != 'quit':
-    frontend.checkInput(entry)
-    entry = input(f'<Entry> : ')
+# entry = input(f'<Entry> : ')
+
+# while entry != 'exit' or entry != 'q' or entry != 'quit':
+#     frontend.checkInput(entry)
+#     entry = input(f'<Entry> : ')
 
 
 
@@ -36,9 +38,9 @@ while entry != 'exit' or entry != 'q' or entry != 'quit':
 
 # formatting.fileFormation(4)
 
-# myModel = modelCreation.LTSMModel(epochs=50, units=100)
-# myModel.createModel(durationYears=4)
-# myModel.trainModel()
+myModel = modelCreation.LTSMModel(epochs=25, units=1000)
+myModel.createModel(sequenceLength=100)
+myModel.trainModel()
 
 # print(f"NP DATASET: {myData}\n")
 
