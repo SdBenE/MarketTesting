@@ -11,8 +11,8 @@ def checkInput(entry):
     elif entry == 'format':
         entry2 = input('How many years would you like to format from? : ')
 
-        if entry2 == int(entry2):
-            formatting.fileFormation(entry2)
+        if entry2 != int(entry2):
+            formatting.fileFormation(periodYears=entry2)
         else:
             print(f'[ERROR!] : Format {entry2} was not expected. Program expected entry of type <int>.')
     elif entry == 'model':

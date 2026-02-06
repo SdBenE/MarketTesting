@@ -56,6 +56,9 @@ class LTSMModel:
         #Layer 2
         self.model.add(LSTM(units=self.units, return_sequences=True))
         self.model.add(Dropout(0.2))
+        
+        # self.model.add(LSTM(units=self.units, return_sequences=True))
+        # self.model.add(Dropout(0.2))
 
         self.model.add(LSTM(units=self.units, return_sequences=False))
 
@@ -77,11 +80,12 @@ class LTSMModel:
         return np.array(x), np.array(y)
 
     def trainModel(self):
-        dataList = pd.read_csv('MarketTesting/src/markettesting/tickers.csv')
+        dataList = pd.read_csv('tickers.csv')
         dataList = dataList['Symbol']
 
         for ticker in dataList:
             rawData = yf.download(ticker, period=self.timePeriod)
+            print(rawData.head())
 
             MIN_DATA_POINTS = self.sequenceLength + 10
 
@@ -90,17 +94,23 @@ class LTSMModel:
                 continue
 
             rawData.columns = rawData.columns.droplevel(level=1)
+            # print(rawData.head())
             rawData = rawData[['Close','High', 'Low', 'Open', 'Volume']]
+            # print(rawData.head())
             rawData.index.name = 'Date'
+            # print(rawData.head())
             rawData.index = pd.to_datetime(rawData.index)
+            # print(rawData.head())
 
             rawData['Close'] = pd.to_numeric(rawData['Close'], errors='coerce')
+            # print(rawData.head())
 
             if rawData.empty:
                 print(f"Catch 1: Ticker {ticker} is empty Skipping...")
                 continue
 
             rawData.dropna(subset=['Close'], inplace=True)
+            print(rawData.head())
 
             # print(rawData.head())
 
@@ -114,6 +124,7 @@ class LTSMModel:
                 continue
             else:
                 usedData = rawData['Close'].values
+                print(usedData)
 
                 indexCutoff = int(len(usedData) * 0.7)
                 trainingPortion = usedData[:indexCutoff]
@@ -122,6 +133,7 @@ class LTSMModel:
                 scale = MinMaxScaler(feature_range=(0,1))
 
                 scale.fit(trainingPortion.reshape(-1,1))
+                print(trainingPortion)
 
                 trainData = scale.transform(trainingPortion.reshape(-1,1))
                 testData = scale.transform(testingPortion.reshape(-1,1))
