@@ -1,2 +1,4 @@
 /src/markettesting/dataFolder/
-/src/markettesting/__pycache__/
+__pycache__/
+*.pyc
+*.keras
