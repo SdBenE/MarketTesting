@@ -49,6 +49,7 @@ myModel = modelCreation.LTSMModel(epochs=25, units=1000)
 myModel.createModel(sequenceLength=100)
 myModel.trainModel()
 
+
 # print(f"NP DATASET: {myData}\n")
 
 # print(f"TF DATASET: {dataset}")

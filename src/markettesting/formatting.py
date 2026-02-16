@@ -25,7 +25,7 @@ def graphData(tickerName):
     plt.show()
 
 def fileFormation(periodYears=1, downLoad=False):
-    dataList = pd.read_csv('tickers.csv')
+    dataList = pd.read_csv('MarketTesting/src/markettesting/tickers.csv')
     tempDataList = dataList
     print(dataList)
     symbols = dataList['Symbol']
@@ -34,6 +34,9 @@ def fileFormation(periodYears=1, downLoad=False):
     duration = f"{periodYears}y"
 
     # emptyTickers = []
+
+    # if not os.path.exists("/MarketTesting/src/markettesting/dataFolder"):
+    #     os.makedirs("/MarketTesting/src/markettesting/dataFolder", exist_ok=True)
 
     for ticker in symbols:
         if os.path.exists(f'/home/sdbene/tf-env/MarketTesting/src/markettesting/dataFolder/{ticker}.csv'):
@@ -56,8 +59,7 @@ def fileFormation(periodYears=1, downLoad=False):
             dropIndex = tempDataList[dataList['Symbol'] == ticker].index
             tempDataList = tempDataList.drop(dropIndex)
         elif downLoad:
-            myTicker.to_csv(f'/home/sdbene/tf-env/MarketTesting/src/markettesting/dataFolder/{ticker}.csv')
-
+            myTicker.to_csv(f'MarketTesting/src/markettesting/dataFolder/{ticker}.csv')
 
         # print(emptyTickers)
         print(f"Datalist Length: {len(tempDataList)}")

@@ -102,19 +102,22 @@ class LTSMModel:
 
         return np.array(xList), np.array(yList)
 
-    def trainModel(self):
-        dataList = pd.read_csv('tickers.csv')
+    def trainModel(self, useDownload=True):
+        dataList = pd.read_csv('/home/enjamin_lmore/tf-env/MarketTesting/src/markettesting/tickers.csv')
         dataList = dataList['Symbol']
 
         for ticker in dataList:
             print(f'     Current Ticker: {ticker}')
 
-            if os.path.exists(f'dataFolder/{ticker}.csv'):
-                rawData = pd.read_csv(f'dataFolder/{ticker}.csv')
+            if useDownload:
+                if os.path.exists(f'dataFolder/{ticker}.csv'):
+                    rawData = pd.read_csv(f'dataFolder/{ticker}.csv')
+                else:
+                    print(f'Ticker file {ticker}.csv is missing! Skipping...')
+                    continue
             else:
-                print(f'Ticker file {ticker}.csv is missing! Skipping...')
-                continue
-            
+                rawData = yf.download(ticker, period=self.timePeriod)
+
             # rawData = yf.download(ticker, period=self.timePeriod)
 
             MIN_DATA_POINTS = self.sequenceLength + 10
