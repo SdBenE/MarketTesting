@@ -110,8 +110,8 @@ class LTSMModel:
             print(f'     Current Ticker: {ticker}')
 
             if useDownload:
-                if os.path.exists(f'dataFolder/{ticker}.csv'):
-                    rawData = pd.read_csv(f'dataFolder/{ticker}.csv')
+                if os.path.exists(f'MarketTesting/src/markettesting/dataFolder/{ticker}.csv'):
+                    rawData = pd.read_csv(f'MarketTesting/src/markettesting/dataFolder/{ticker}.csv')
                 else:
                     print(f'Ticker file {ticker}.csv is missing! Skipping...')
                     continue
@@ -128,6 +128,9 @@ class LTSMModel:
 
             # print(rawData.columns)
             # print(rawData.head())
+
+            rawData.reset_index(drop=True)
+
             for x in range(0,2):
                 rawData = rawData.drop(index=x)
             # print(rawData.head())
@@ -183,4 +186,4 @@ class LTSMModel:
             print(f'CLASS SIZE: {sys.getsizeof(self)} bytes')
             print(f'MODEL SIZE: {sys.getsizeof(self.model)} bytes')
 
-            self.model.save('itWorked.keras')
+        self.model.save('MarketTesting/src/markettesting/LSTMStockModel.keras')
