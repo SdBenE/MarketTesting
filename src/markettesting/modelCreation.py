@@ -1,6 +1,7 @@
 import yfinance as yf
 import csv
 import time
+import sys
 #from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -15,6 +16,8 @@ from keras.models import Sequential, load_model
 from keras.layers import LSTM, Dense, Dropout
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_absolute_error
+from sklearn.model_selection import train_test_split
+from keras.callbacks import EarlyStopping
 
 class LTSMModel:
     def __init__(self, epochs=25, units=50):
@@ -42,10 +45,10 @@ class LTSMModel:
 
 
 
-    def importModel(self):
-        self.model = load_model('/home/enjamin_lmore/tf-env/MarketTesting/src/markettesting/myModel.keras')
+    def importModel(self, filename='itWorked.keras'):
+        self.model = load_model(filename)
 
-    def createModel(self, durationYears=1, sequenceLength=60):
+    def createModel(self, durationYears=1, sequenceLength=100):
         self.timePeriod = f"{durationYears}y"
         self.sequenceLength = sequenceLength
 
@@ -60,32 +63,59 @@ class LTSMModel:
         # self.model.add(LSTM(units=self.units, return_sequences=True))
         # self.model.add(Dropout(0.2))
 
+        # #Layer 3
+        # self.model.add(LSTM(units=self.units, return_sequences=True))
+        # self.model.add(Dropout(0.2))
+
+        # #Layer 4
+        # self.model.add(LSTM(units=self.units, return_sequences=True))
+        # self.model.add(Dropout(0.2))
+
+        #Layer 5
         self.model.add(LSTM(units=self.units, return_sequences=False))
 
         self.model.add(Dense(units=1))
 
+        self.earlyStopSystem = EarlyStopping(
+            monitor='val_loss',
+            patience=5,
+            restore_best_weights=True
+        )
+
         self.model.compile(optimizer='adam', loss='mean_squared_error')
 
     def dataSequence(self, trainingData):
-        x = []
-        y = []
+        xList = []
+        yList = []
+        
+        i = 0
 
-        for i in range(self.sequenceLength, len(trainingData)):
-            x.append(trainingData[i - self.sequenceLength:i, 0])
-            y.append(trainingData[i, 0])
+        for j in range(self.sequenceLength, len(trainingData)):
+            xList.append(trainingData.iloc[i:j]) #Adds dataframe between start at i and i the sequence length, all the way to the end of the training data
+            # print(f'Length of xList at first index: {len(xList[0])}')
 
-        # print(f"X Array {np.array(x)}")
-        # print(f"Y Array {np.array(y)}")
+            yList.append(trainingData.at[j, 'Close']) #Adds the following day to it
+            # print(f'j : {j}')
+            # print(f'i : {i}')
+            i+=1
+            # break #TODO: Remove this!!!!!
 
-        return np.array(x), np.array(y)
+        return np.array(xList), np.array(yList)
 
     def trainModel(self):
         dataList = pd.read_csv('tickers.csv')
         dataList = dataList['Symbol']
 
         for ticker in dataList:
-            rawData = yf.download(ticker, period=self.timePeriod)
-            print(rawData.head())
+            print(f'     Current Ticker: {ticker}')
+
+            if os.path.exists(f'dataFolder/{ticker}.csv'):
+                rawData = pd.read_csv(f'dataFolder/{ticker}.csv')
+            else:
+                print(f'Ticker file {ticker}.csv is missing! Skipping...')
+                continue
+            
+            # rawData = yf.download(ticker, period=self.timePeriod)
 
             MIN_DATA_POINTS = self.sequenceLength + 10
 
@@ -93,77 +123,61 @@ class LTSMModel:
                 print("CATCH 0: SKipping...")
                 continue
 
-            rawData.columns = rawData.columns.droplevel(level=1)
+            # print(rawData.columns)
             # print(rawData.head())
-            rawData = rawData[['Close','High', 'Low', 'Open', 'Volume']]
-            # print(rawData.head())
-            rawData.index.name = 'Date'
-            # print(rawData.head())
-            rawData.index = pd.to_datetime(rawData.index)
+            for x in range(0,2):
+                rawData = rawData.drop(index=x)
             # print(rawData.head())
 
-            rawData['Close'] = pd.to_numeric(rawData['Close'], errors='coerce')
-            # print(rawData.head())
+            rawData.columns = ['Date', 'Close', 'High', 'Low', 'Open', 'Volume']
 
             if rawData.empty:
                 print(f"Catch 1: Ticker {ticker} is empty Skipping...")
                 continue
 
             rawData.dropna(subset=['Close'], inplace=True)
-            print(rawData.head())
-
+            rawData = rawData.reset_index()
+            rawData.drop(labels='index', axis=1, inplace=True)
             # print(rawData.head())
 
-            # rawData['Date'] = pd.to_datetime(rawData['Date'])
-            # rawData.set_index('Date', inplace=True)#FIXME: Error with "Date" column
-            
-            rawData.dropna(subset=['Close'], inplace=True)
+            rawData.drop(labels='Date', axis=1, inplace=True)
+            # print(rawData.head()) 
 
-            if rawData.empty or len(rawData) < MIN_DATA_POINTS:
-                print(f"Catch 2: {ticker} IS EMPTY OR TOO SMALL: SKIPPING...")
-                continue
-            else:
-                usedData = rawData['Close'].values
-                print(usedData)
+            #SCALING
 
-                indexCutoff = int(len(usedData) * 0.7)
-                trainingPortion = usedData[:indexCutoff]
-                testingPortion = usedData[indexCutoff:]
+            scaler = MinMaxScaler(feature_range=(0,1))
 
-                scale = MinMaxScaler(feature_range=(0,1))
+            scaledData = scaler.fit_transform(rawData)
+            scaledData = pd.DataFrame(scaledData, columns=rawData.columns)
 
-                scale.fit(trainingPortion.reshape(-1,1))
-                print(trainingPortion)
+            # print(scaledData.head())
 
-                trainData = scale.transform(trainingPortion.reshape(-1,1))
-                testData = scale.transform(testingPortion.reshape(-1,1))
+            #ORGANIZING
 
-                print(f"Reshaping {ticker}")
+            xFull, yFull = self.dataSequence(scaledData)
+            # print(xTraining)
+            # print(yTraining)
+            # print(xTraining.shape)
+            # print(yTraining.shape)
 
-                xVals, yVals = self.dataSequence(trainData)
-                x3D = np.reshape(xVals, (xVals.shape[0], xVals.shape[1], 1))
+            #SPLITTING DATA
+            splitIndex = int(0.8 * len(yFull)) #Integer casting for proper index
 
-                # print(x3D)
+            xTrain = xFull[:splitIndex]
+            yTrain = yFull[:splitIndex]
+            xTest = xFull[splitIndex+1:]
+            yTest = yFull[splitIndex+1:]
 
-                self.model.fit(x=x3D, y=yVals, epochs=self.epochs, batch_size=32)
+            history = self.model.fit(
+                xTrain, 
+                yTrain, 
+                epochs=self.epochs, 
+                batch_size=32, 
+                callbacks=[self.earlyStopSystem],
+                validation_data=(xTest, yTest)
+            )
 
+            print(f'CLASS SIZE: {sys.getsizeof(self)} bytes')
+            print(f'MODEL SIZE: {sys.getsizeof(self.model)} bytes')
 
-                testSeq, testTarget = self.dataSequence(testData)
-
-                unscaledTargets = usedData[indexCutoff:]
-                try:
-                    scaledPredictions = self.model.predict(testSeq, verbose=0)
-                except UnboundLocalError:
-                    print(f"Catch 3: Test sequence Invalid for ticker {ticker}, skipping...")
-                    continue
-
-                fixedPredicts = scale.inverse_transform(scaledPredictions)
-
-                actualTargets = unscaledTargets.reshape(-1, 1)
-
-                actualFromScaled = scale.inverse_transform(testTarget.reshape(-1,1))
-
-                mae = mean_absolute_error(actualFromScaled, fixedPredicts)
-                print(f"MEAN ABSOLUTE ERROR FROM {ticker}: ${mae}")
-
-                self.model.save('/home/enjamin_lmore/tf-env/MarketTesting/src/markettesting/myModel.keras')
+            self.model.save('itWorked.keras')

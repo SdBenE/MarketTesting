@@ -10,7 +10,6 @@ import numpy as np
 import tensorflow as tf
 import time
 
-matplotlib.use('TkAgg')
 
 def graphData(tickerName):
     table = np.genfromtxt(f'MarketTesting/src/markettesting/dataFolder/{tickerName}.csv', delimiter=',', dtype=None, encoding=None)
@@ -25,8 +24,8 @@ def graphData(tickerName):
     
     plt.show()
 
-def fileFormation(periodYears=1):
-    dataList = pd.read_csv('MarketTesting/src/markettesting/tickers.csv')
+def fileFormation(periodYears=1, downLoad=False):
+    dataList = pd.read_csv('tickers.csv')
     tempDataList = dataList
     print(dataList)
     symbols = dataList['Symbol']
@@ -37,6 +36,10 @@ def fileFormation(periodYears=1):
     # emptyTickers = []
 
     for ticker in symbols:
+        if os.path.exists(f'/home/sdbene/tf-env/MarketTesting/src/markettesting/dataFolder/{ticker}.csv'):
+            print(f'File {ticker}.csv already exists! Skipping...')
+            continue
+        
         print(f"      CURRENT TICKER {ticker}      ")
         
         start = time.perf_counter()
@@ -52,6 +55,9 @@ def fileFormation(periodYears=1):
 
             dropIndex = tempDataList[dataList['Symbol'] == ticker].index
             tempDataList = tempDataList.drop(dropIndex)
+        elif downLoad:
+            myTicker.to_csv(f'/home/sdbene/tf-env/MarketTesting/src/markettesting/dataFolder/{ticker}.csv')
+
 
         # print(emptyTickers)
         print(f"Datalist Length: {len(tempDataList)}")
