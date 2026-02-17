@@ -18,7 +18,7 @@ warnings.filterwarnings('ignore')
 
 frontend.intro()
 
-# formatting.fileFormation(periodYears=4, downLoad=True)
+# formatting.fileFormation(periodYears=4, downLoad=False)
 
 # entry = input(f'<Entry> : ')
 
@@ -47,7 +47,7 @@ frontend.intro()
 
 myModel = modelCreation.LTSMModel(epochs=25, units=1000)
 myModel.createModel(sequenceLength=100)
-myModel.trainModel(useDownload=False)
+myModel.trainModel()
 
 
 # print(f"NP DATASET: {myData}\n")

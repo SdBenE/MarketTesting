@@ -102,6 +102,30 @@ class LTSMModel:
 
         return np.array(xList), np.array(yList)
 
+    def pullCSV(self, ticker):
+        if os.path.exists(f'MarketTesting/src/markettesting/dataFolder/{ticker}.csv'):
+            dataSet = pd.read_csv(f'MarketTesting/src/markettesting/dataFolder/{ticker}.csv')
+        else:
+            return None
+
+        dataSet = dataSet.iloc[2:].copy()
+        dataSet.columns = dataSet.columns.get_level_values(0) #Flatten Columns to prevent mismatch
+        dataSet = dataSet.reset_index(drop=True)
+
+        dataSet = dataSet.drop(labels='Price', axis=1)
+        dataSet.columns = ['Close', 'High', 'Low', 'Open', 'Volume']
+        return dataSet
+        
+    def pullYF(self, ticker):
+        dataSet = yf.download(ticker, period=self.timePeriod)
+        dataSet = dataSet.reset_index(drop=True) 
+
+        dataSet.columns = dataSet.columns.get_level_values(0) #Flatten Columns to prevent mismatch
+        dataSet.columns = ['Close', 'High', 'Low', 'Open', 'Volume'] #Reset Column titles'
+        return dataSet
+
+
+
     def trainModel(self, useDownload=True):
         dataList = pd.read_csv('/home/enjamin_lmore/tf-env/MarketTesting/src/markettesting/tickers.csv')
         dataList = dataList['Symbol']
@@ -110,13 +134,11 @@ class LTSMModel:
             print(f'     Current Ticker: {ticker}')
 
             if useDownload:
-                if os.path.exists(f'MarketTesting/src/markettesting/dataFolder/{ticker}.csv'):
-                    rawData = pd.read_csv(f'MarketTesting/src/markettesting/dataFolder/{ticker}.csv')
-                else:
-                    print(f'Ticker file {ticker}.csv is missing! Skipping...')
-                    continue
+                rawData = self.pullCSV(ticker)
+                if rawData is None:
+                    print(f"File {ticker}.csv does not exist. Skipping...")
             else:
-                rawData = yf.download(ticker, period=self.timePeriod)
+                rawData = self.pullYF(ticker)
 
             # rawData = yf.download(ticker, period=self.timePeriod)
 
@@ -126,27 +148,6 @@ class LTSMModel:
                 print("CATCH 0: SKipping...")
                 continue
 
-            # print(rawData.columns)
-            # print(rawData.head())
-
-            rawData.reset_index(drop=True)
-
-            for x in range(0,2):
-                rawData = rawData.drop(index=x)
-            # print(rawData.head())
-
-            rawData.columns = ['Date', 'Close', 'High', 'Low', 'Open', 'Volume']
-
-            if rawData.empty:
-                print(f"Catch 1: Ticker {ticker} is empty Skipping...")
-                continue
-
-            rawData.dropna(subset=['Close'], inplace=True)
-            rawData = rawData.reset_index()
-            rawData.drop(labels='index', axis=1, inplace=True)
-            # print(rawData.head())
-
-            rawData.drop(labels='Date', axis=1, inplace=True)
             # print(rawData.head()) 
 
             #SCALING

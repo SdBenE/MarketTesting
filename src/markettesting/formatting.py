@@ -59,6 +59,7 @@ def fileFormation(periodYears=1, downLoad=False):
             dropIndex = tempDataList[dataList['Symbol'] == ticker].index
             tempDataList = tempDataList.drop(dropIndex)
         elif downLoad:
+            
             myTicker.to_csv(f'MarketTesting/src/markettesting/dataFolder/{ticker}.csv')
 
         # print(emptyTickers)
