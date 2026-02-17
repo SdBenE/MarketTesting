@@ -102,9 +102,9 @@ class LTSMModel:
 
         return np.array(xList), np.array(yList)
 
-    def pullCSV(self, ticker):
-        if os.path.exists(f'MarketTesting/src/markettesting/dataFolder/{ticker}.csv'):
-            dataSet = pd.read_csv(f'MarketTesting/src/markettesting/dataFolder/{ticker}.csv')
+    def pullCSV(self, ticker, mainDir='MarketTesting/src/markettesting/dataFolder/'):
+        if os.path.exists(f'{mainDir}{ticker}.csv'):
+            dataSet = pd.read_csv(f'{mainDir}{ticker}.csv')
         else:
             return None
 
