@@ -127,7 +127,7 @@ class LTSMModel:
 
 
     def trainModel(self, useDownload=True):
-        dataList = pd.read_csv('/home/enjamin_lmore/tf-env/MarketTesting/src/markettesting/tickers.csv')
+        dataList = pd.read_csv('MarketTesting/src/markettesting/tickers.csv')
         dataList = dataList['Symbol']
 
         for ticker in dataList:
