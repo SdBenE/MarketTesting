@@ -1,6 +1,5 @@
 import yfinance as yf
 import csv
-#from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
@@ -9,7 +8,6 @@ import tensorflow as tf
 import formatting
 import modelCreation
 import frontend
-#import dataLog
 from keras.models import Sequential
 from keras.layers import LSTM, Dense, Dropout
 import warnings

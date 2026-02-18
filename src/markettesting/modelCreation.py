@@ -2,7 +2,6 @@ import yfinance as yf
 import csv
 import time
 import sys
-#from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -15,8 +14,6 @@ from datetime import date
 from keras.models import Sequential, load_model
 from keras.layers import LSTM, Dense, Dropout
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import mean_absolute_error
-from sklearn.model_selection import train_test_split
 from keras.callbacks import EarlyStopping
 
 class LTSMModel:
