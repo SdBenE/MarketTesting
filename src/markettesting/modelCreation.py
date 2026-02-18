@@ -120,6 +120,9 @@ class LTSMModel:
         dataSet = yf.download(ticker, period=self.timePeriod)
         dataSet = dataSet.reset_index(drop=True) 
 
+        if len(dataSet) < 10:
+            return None
+
         dataSet.columns = dataSet.columns.get_level_values(0) #Flatten Columns to prevent mismatch
         dataSet.columns = ['Close', 'High', 'Low', 'Open', 'Volume'] #Reset Column titles'
         return dataSet
@@ -135,20 +138,14 @@ class LTSMModel:
 
             if useDownload:
                 rawData = self.pullCSV(ticker)
-                if rawData is None:
-                    print(f"File {ticker}.csv does not exist. Skipping...")
             else:
                 rawData = self.pullYF(ticker)
 
             # rawData = yf.download(ticker, period=self.timePeriod)
 
-            MIN_DATA_POINTS = self.sequenceLength + 10
-
-            if len(rawData['Close']) < MIN_DATA_POINTS or rawData.empty:
-                print("CATCH 0: SKipping...")
-                continue
-
-            # print(rawData.head()) 
+            if rawData is None:
+                print(f"Ticker {ticker} is too small or doesn't exist")
+                print(f"Skipping {ticker}...")
 
             #SCALING
 
