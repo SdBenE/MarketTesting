@@ -141,8 +141,6 @@ class LTSMModel:
             else:
                 rawData = self.pullYF(ticker)
 
-            # rawData = yf.download(ticker, period=self.timePeriod)
-
             if rawData is None:
                 print(f"Ticker {ticker} is too small or doesn't exist")
                 print(f"Skipping {ticker}...")
@@ -154,15 +152,9 @@ class LTSMModel:
             scaledData = scaler.fit_transform(rawData)
             scaledData = pd.DataFrame(scaledData, columns=rawData.columns)
 
-            # print(scaledData.head())
-
             #ORGANIZING
 
             xFull, yFull = self.dataSequence(scaledData)
-            # print(xTraining)
-            # print(yTraining)
-            # print(xTraining.shape)
-            # print(yTraining.shape)
 
             #SPLITTING DATA
             splitIndex = int(0.8 * len(yFull)) #Integer casting for proper index
