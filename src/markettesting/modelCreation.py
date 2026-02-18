@@ -27,21 +27,16 @@ class LTSMModel:
         self.predictionTable = None
     
     def predictions(self, date=date.today()):
-        # if self.tickerTable != None: #TODO: Uncomment this section once else statement is completed
+        tickerList = pd.read_csv('/home/enjamin_lmore/tf-env/MarketTesting/src/markettesting/tickers.csv')
+        tickerList = tickerList['Symbol']
             
-        # else:
-            tickerList = pd.read_csv('/home/enjamin_lmore/tf-env/MarketTesting/src/markettesting/tickers.csv')
-            tickerList = tickerList['Symbol']
-            
-            self.predictionTable = pd.DataFrame()
-            self.predictionTable['Ticker'] = tickerList
+        self.predictionTable = pd.DataFrame()
+        self.predictionTable['Ticker'] = tickerList
 
-            print(self.predictionTable.head())
+        print(self.predictionTable.head())
 
-
-            self.predictionTable[f'{date.month}-{date.day}-{date.year}'] = None
-            print(self.predictionTable.head())
-            # print(today)
+        self.predictionTable[f'{date.month}-{date.day}-{date.year}'] = None
+        print(self.predictionTable.head())
 
 
 
@@ -59,19 +54,8 @@ class LTSMModel:
         #Layer 2
         self.model.add(LSTM(units=self.units, return_sequences=True))
         self.model.add(Dropout(0.2))
-        
-        # self.model.add(LSTM(units=self.units, return_sequences=True))
-        # self.model.add(Dropout(0.2))
 
-        # #Layer 3
-        # self.model.add(LSTM(units=self.units, return_sequences=True))
-        # self.model.add(Dropout(0.2))
-
-        # #Layer 4
-        # self.model.add(LSTM(units=self.units, return_sequences=True))
-        # self.model.add(Dropout(0.2))
-
-        #Layer 5
+        #Layer 3
         self.model.add(LSTM(units=self.units, return_sequences=False))
 
         self.model.add(Dense(units=1))
@@ -91,14 +75,10 @@ class LTSMModel:
         i = 0
 
         for j in range(self.sequenceLength, len(trainingData)):
-            xList.append(trainingData.iloc[i:j]) #Adds dataframe between start at i and i the sequence length, all the way to the end of the training data
-            # print(f'Length of xList at first index: {len(xList[0])}')
+            xList.append(trainingData.iloc[i:j])
 
             yList.append(trainingData.at[j, 'Close']) #Adds the following day to it
-            # print(f'j : {j}')
-            # print(f'i : {i}')
             i+=1
-            # break #TODO: Remove this!!!!!
 
         return np.array(xList), np.array(yList)
 
@@ -109,7 +89,7 @@ class LTSMModel:
             return None
 
         dataSet = dataSet.iloc[2:].copy()
-        dataSet.columns = dataSet.columns.get_level_values(0) #Flatten Columns to prevent mismatch
+        dataSet.columns = dataSet.columns.get_level_values(0)
         dataSet = dataSet.reset_index(drop=True)
 
         dataSet = dataSet.drop(labels='Price', axis=1)
@@ -123,11 +103,9 @@ class LTSMModel:
         if len(dataSet) < 10:
             return None
 
-        dataSet.columns = dataSet.columns.get_level_values(0) #Flatten Columns to prevent mismatch
-        dataSet.columns = ['Close', 'High', 'Low', 'Open', 'Volume'] #Reset Column titles'
+        dataSet.columns = dataSet.columns.get_level_values(0)
+        dataSet.columns = ['Close', 'High', 'Low', 'Open', 'Volume']
         return dataSet
-
-
 
     def trainModel(self, useDownload=True):
         dataList = pd.read_csv('MarketTesting/src/markettesting/tickers.csv')
@@ -144,16 +122,15 @@ class LTSMModel:
             if rawData is None:
                 print(f"Ticker {ticker} is too small or doesn't exist")
                 print(f"Skipping {ticker}...")
+                continue
 
             #SCALING
-
             scaler = MinMaxScaler(feature_range=(0,1))
 
             scaledData = scaler.fit_transform(rawData)
             scaledData = pd.DataFrame(scaledData, columns=rawData.columns)
 
             #ORGANIZING
-
             xFull, yFull = self.dataSequence(scaledData)
 
             #SPLITTING DATA
