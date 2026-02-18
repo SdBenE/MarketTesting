@@ -116,7 +116,7 @@ class LTSMModel:
             else:
                 rawData = self.pullYF(ticker)
 
-            if rawData is None:
+            if rawData is None or len(rawData) < 100:
                 print(f"Ticker {ticker} is too small or doesn't exist")
                 print(f"Skipping {ticker}...")
                 continue
@@ -126,6 +126,7 @@ class LTSMModel:
 
             scaledData = scaler.fit_transform(rawData)
             scaledData = pd.DataFrame(scaledData, columns=rawData.columns)
+
 
             #ORGANIZING
             xFull, yFull = self.dataSequence(scaledData)
