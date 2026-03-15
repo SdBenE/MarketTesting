@@ -1,6 +1,5 @@
 import yfinance as yf
 import csv
-#from pathlib import Path
 import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt

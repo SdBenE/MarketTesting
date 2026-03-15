@@ -1,6 +1,5 @@
 import yfinance as yf
 import csv
-#from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
@@ -9,7 +8,6 @@ import tensorflow as tf
 import formatting
 import modelCreation
 import frontend
-#import dataLog
 from keras.models import Sequential
 from keras.layers import LSTM, Dense, Dropout
 import warnings
@@ -47,7 +45,7 @@ frontend.intro()
 
 myModel = modelCreation.LTSMModel(epochs=25, units=1000)
 myModel.createModel(sequenceLength=100)
-myModel.trainModel()
+myModel.trainModel(useDownload=True)
 
 
 # print(f"NP DATASET: {myData}\n")
