@@ -22,20 +22,6 @@ class LTSMModel:
         self.epochs = epochs
         self.units = units
         self.predictionTable = None
-    
-    def predictions(self, date=date.today()):
-        tickerList = pd.read_csv('/home/enjamin_lmore/tf-env/MarketTesting/src/markettesting/tickers.csv')
-        tickerList = tickerList['Symbol']
-            
-        self.predictionTable = pd.DataFrame()
-        self.predictionTable['Ticker'] = tickerList
-
-        print(self.predictionTable.head())
-
-        self.predictionTable[f'{date.month}-{date.day}-{date.year}'] = None
-        print(self.predictionTable.head())
-
-
 
     def importModel(self, filename='itWorked.keras'):
         self.model = load_model(filename)
@@ -152,3 +138,5 @@ class LTSMModel:
             print(f'MODEL SIZE: {sys.getsizeof(self.model)} bytes')
 
         self.model.save('MarketTesting/src/markettesting/LSTMStockModel.keras')
+
+    # def getPrediction(self):
