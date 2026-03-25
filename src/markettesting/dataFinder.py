@@ -9,8 +9,6 @@ from datetime import date, timedelta
 def createData(startDate, endDate):
     myData = pd.read_csv('MarketTesting/src/markettesting/tickers.csv')
 
-    
-
     dataList = myData['Symbol']
     for symbol in dataList: #The entire NASDAQ in the palm of my hand
             if not os.path.exists(f'{symbol}.csv'):

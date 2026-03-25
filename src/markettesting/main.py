@@ -41,11 +41,11 @@ frontend.intro()
 # print("\n")
 
 
-# formatting.fileFormation(4)
+# formatting.fileFormation(4, downLoad=True)
 
 myModel = modelCreation.LTSMModel(epochs=25, units=1000)
 myModel.createModel(sequenceLength=100)
-myModel.trainModel(useDownload=False)
+myModel.trainModel(useDownload=True, useOldScaler=True)
 
 
 # print(f"NP DATASET: {myData}\n")

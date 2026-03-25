@@ -38,7 +38,7 @@ def fileFormation(periodYears=1, downLoad=False):
     #     os.makedirs("/MarketTesting/src/markettesting/dataFolder", exist_ok=True)
 
     for ticker in symbols:
-        if os.path.exists(f'/home/sdbene/tf-env/MarketTesting/src/markettesting/dataFolder/{ticker}.csv'):
+        if os.path.exists(f'MarketTesting/src/markettesting/dataFolder/{ticker}.csv'):
             print(f'File {ticker}.csv already exists! Skipping...')
             continue
         

@@ -1,6 +1,4 @@
 import yfinance as yf
-import csv
-import time
 import sys
 import numpy as np
 import pandas as pd
@@ -9,43 +7,30 @@ import os
 import dataFinder
 import tensorflow as tf
 import formatting
-import keras
 from datetime import date
 from keras.models import Sequential, load_model
 from keras.layers import LSTM, Dense, Dropout
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from keras.callbacks import EarlyStopping
 
 class LTSMModel:
-    def __init__(self, epochs=25, units=50):
+    def __init__(self, epochs=25, units=50, name="StockModel"):
+        self.name = name
         self.model = Sequential()
         self.epochs = epochs
         self.units = units
         self.predictionTable = None
-    
-    def predictions(self, date=date.today()):
-        tickerList = pd.read_csv('/home/enjamin_lmore/tf-env/MarketTesting/src/markettesting/tickers.csv')
-        tickerList = tickerList['Symbol']
-            
-        self.predictionTable = pd.DataFrame()
-        self.predictionTable['Ticker'] = tickerList
+        self.scaler = None
 
-        print(self.predictionTable.head())
+    def importModel(self):
+        self.model = load_model(f"{self.name}.keras")
 
-        self.predictionTable[f'{date.month}-{date.day}-{date.year}'] = None
-        print(self.predictionTable.head())
-
-
-
-    def importModel(self, filename='itWorked.keras'):
-        self.model = load_model(filename)
-
-    def createModel(self, durationYears=1, sequenceLength=100):
+    def createModel(self, durationYears=1, sequenceLength=100, numFeatures=5):
         self.timePeriod = f"{durationYears}y"
         self.sequenceLength = sequenceLength
 
         #Layer 1
-        self.model.add(LSTM(units=self.units, return_sequences=True, input_shape=(self.sequenceLength, 1)))
+        self.model.add(LSTM(units=self.units, return_sequences=True, input_shape=(self.sequenceLength, numFeatures)))
         self.model.add(Dropout(0.2))
 
         #Layer 2
@@ -65,6 +50,12 @@ class LTSMModel:
 
         self.model.compile(optimizer='adam', loss='mean_squared_error')
 
+    def getPrediction(self, inputData):
+        #TODO: Complete Prediction method
+        #TODO: Identify dense layer changes with numFeatures
+        if len(inputData) != self.sequenceLength:
+            raise ValueError(f"getPrediction: Input data shape must match model's sequenceLength in:{len(inputData)} model:{self.sequenceLength}")
+        
     def dataSequence(self, trainingData):
         xList = []
         yList = []
@@ -104,7 +95,7 @@ class LTSMModel:
         dataSet.columns = ['Close', 'High', 'Low', 'Open', 'Volume']
         return dataSet
 
-    def trainModel(self, useDownload=True):
+    def trainModel(self, useDownload=True, useOldScaler=False):
         dataList = pd.read_csv('MarketTesting/src/markettesting/tickers.csv')
         dataList = dataList['Symbol']
 
@@ -122,11 +113,17 @@ class LTSMModel:
                 continue
 
             #SCALING
-            scaler = MinMaxScaler(feature_range=(0,1))
+            # scaler = MinMaxScaler(feature_range=(0,1))
+            scaler = StandardScaler()
 
+            #This uses global scaling based on the whole dataset to check proper values
+
+            # scaledData = self.valueScaler.transform(rawData)
             scaledData = scaler.fit_transform(rawData)
             scaledData = pd.DataFrame(scaledData, columns=rawData.columns)
 
+            #TODO:Remove before use
+            print(scaledData.describe())
 
             #ORGANIZING
             xFull, yFull = self.dataSequence(scaledData)
@@ -151,4 +148,6 @@ class LTSMModel:
             print(f'CLASS SIZE: {sys.getsizeof(self)} bytes')
             print(f'MODEL SIZE: {sys.getsizeof(self.model)} bytes')
 
-        self.model.save('MarketTesting/src/markettesting/LSTMStockModel.keras')
+        self.model.save(f'MarketTesting/src/markettesting/{self.name}.keras')
+
+    # def getPrediction(self):
