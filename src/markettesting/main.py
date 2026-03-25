@@ -41,7 +41,7 @@ frontend.intro()
 # print("\n")
 
 
-formatting.fileFormation(4, downLoad=True)
+# formatting.fileFormation(4, downLoad=True)
 
 myModel = modelCreation.LTSMModel(epochs=25, units=1000)
 myModel.createModel(sequenceLength=100)
