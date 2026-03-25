@@ -18,14 +18,16 @@ from sklearn.preprocessing import MinMaxScaler
 from keras.callbacks import EarlyStopping
 
 class LTSMModel:
-    def __init__(self, epochs=25, units=50):
+    def __init__(self, epochs=25, units=50, name="StockModel"):
+        self.name = name
         self.model = Sequential()
         self.epochs = epochs
         self.units = units
         self.predictionTable = None
+        self.scaler = None
 
-    def importModel(self, filename='itWorked.keras'):
-        self.model = load_model(filename)
+    def importModel(self):
+        self.model = load_model(f"{self.name}.keras")
 
     def createModel(self, durationYears=1, sequenceLength=100):
         self.timePeriod = f"{durationYears}y"
@@ -53,13 +55,10 @@ class LTSMModel:
         self.model.compile(optimizer='adam', loss='mean_squared_error')
 
     def getPrediction(self, inputData):
+        #TODO: Complete Prediction method
         if len(inputData) != self.sequenceLength:
             raise ValueError(f"getPrediction: Input data shape must match model's sequenceLength in:{len(inputData)} model:{self.sequenceLength}")
         
-
-
-        
-
     def dataSequence(self, trainingData):
         xList = []
         yList = []
@@ -73,6 +72,29 @@ class LTSMModel:
             i+=1
 
         return np.array(xList), np.array(yList)
+
+    def identifyScaler(self, useDownload=True):
+        dataList = pd.read_csv('MarketTesting/src/markettesting/tickers.csv')
+        dataList = dataList['Symbol']
+        compDataList = []
+
+        for ticker in dataList:
+            print(f"Current Ticker: {ticker}")
+            if useDownload:
+                rawData = self.pullCSV(ticker)
+            else:
+                rawData = self.pullYF(ticker)
+
+            if rawData is None or len(rawData) < 100:
+                print(f"Ticker {ticker} is too short, skipping ticker...")
+            else:
+                compDataList.append(rawData)
+
+            listForScaling = pd.concat(compDataList, ignore_index=True)
+            self.valueScaler = MinMaxScaler(feature_range=(0,1))
+            self.valueScaler.fit(listForScaling)
+
+        pickle.dump(self.valueScaler, open(f'{self.name}Scaler.pkl', "wb"))
 
     def pullCSV(self, ticker, mainDir='MarketTesting/src/markettesting/dataFolder/'):
         if os.path.exists(f'{mainDir}{ticker}.csv'):
@@ -103,26 +125,12 @@ class LTSMModel:
         dataList = pd.read_csv('MarketTesting/src/markettesting/tickers.csv')
         dataList = dataList['Symbol']
         
-        print("BEGINNING COMPREHENSIVE SCALER COMPOSITION...")
-
-        compDataList = []
-
-        for ticker in dataList:
-            if useDownload:
-                rawData = self.pullCSV(ticker)
-            else:
-                rawData = self.pullYF(ticker)
-
-            if rawData.empty() or len(rawData) <= 100:
-                print(f"Ticker {ticker} is too short, skipping ticker...")
-            else:
-                compDataList.append(rawData)
-
-            listForScaling = pd.concat(compDataList, ignore_index=True)
-            self.valueScaler = MinMaxScaler(feature_range=(0,1))
-            self.valueScaler.fit()
-            
-
+        if (self.scaler == None):
+            print("identifyScaler has not been run yet!")
+            print("running identifyScaler...")
+            self.identifyScaler(useDownload)
+        else:
+            self.valueScaler = pickle.load(f"{self.name}Scaler.pkl", "rb")
 
         for ticker in dataList:
             print(f'     Current Ticker: {ticker}')
@@ -138,12 +146,12 @@ class LTSMModel:
                 continue
 
             #SCALING
-            scaler = MinMaxScaler(feature_range=(0,1))
+            # scaler = MinMaxScaler(feature_range=(0,1))
 
-            scaledData = scaler.fit_transform(rawData)
+
+            #This uses global scaling based on the whole dataset to check proper values
+            scaledData = self.scaler.fit_transform(rawData)
             scaledData = pd.DataFrame(scaledData, columns=rawData.columns)
-
-            
 
             #ORGANIZING
             xFull, yFull = self.dataSequence(scaledData)
@@ -168,6 +176,6 @@ class LTSMModel:
             print(f'CLASS SIZE: {sys.getsizeof(self)} bytes')
             print(f'MODEL SIZE: {sys.getsizeof(self.model)} bytes')
 
-        self.model.save('MarketTesting/src/markettesting/LSTMStockModel.keras')
+        self.model.save(f'MarketTesting/src/markettesting/{self.name}.keras')
 
     # def getPrediction(self):
