@@ -1,6 +1,4 @@
 import yfinance as yf
-import csv
-import time
 import sys
 import numpy as np
 import pandas as pd
@@ -9,12 +7,10 @@ import os
 import dataFinder
 import tensorflow as tf
 import formatting
-import keras
-import pickle
 from datetime import date
 from keras.models import Sequential, load_model
 from keras.layers import LSTM, Dense, Dropout
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from keras.callbacks import EarlyStopping
 
 class LTSMModel:
@@ -29,12 +25,12 @@ class LTSMModel:
     def importModel(self):
         self.model = load_model(f"{self.name}.keras")
 
-    def createModel(self, durationYears=1, sequenceLength=100):
+    def createModel(self, durationYears=1, sequenceLength=100, numFeatures=5):
         self.timePeriod = f"{durationYears}y"
         self.sequenceLength = sequenceLength
 
         #Layer 1
-        self.model.add(LSTM(units=self.units, return_sequences=True, input_shape=(self.sequenceLength, 1)))
+        self.model.add(LSTM(units=self.units, return_sequences=True, input_shape=(self.sequenceLength, numFeatures)))
         self.model.add(Dropout(0.2))
 
         #Layer 2
@@ -56,6 +52,7 @@ class LTSMModel:
 
     def getPrediction(self, inputData):
         #TODO: Complete Prediction method
+        #TODO: Identify dense layer changes with numFeatures
         if len(inputData) != self.sequenceLength:
             raise ValueError(f"getPrediction: Input data shape must match model's sequenceLength in:{len(inputData)} model:{self.sequenceLength}")
         
@@ -72,38 +69,6 @@ class LTSMModel:
             i+=1
 
         return np.array(xList), np.array(yList)
-
-    def identifyScaler(self, useDownload=True):
-        dataList = pd.read_csv('MarketTesting/src/markettesting/tickers.csv')
-        dataList = dataList['Symbol']
-        compDataList = []
-
-        emptyTickerTolerance = 0
-
-        for ticker in dataList:
-            emptyTickerTolerance += 1
-
-            if emptyTickerTolerance >= 10:
-                print("Maximum Empty Ticker Tolerance Reached! Ending indentifyScaler...")
-                break
-
-            print(f"Current Ticker: {ticker}")
-            if useDownload:
-                rawData = self.pullCSV(ticker)
-            else:
-                rawData = self.pullYF(ticker)
-
-            if rawData is None or len(rawData) < 100:
-                print(f"Ticker {ticker} is too short, skipping ticker...")
-            else:
-                emptyTickerTolerance = 0
-                compDataList.append(rawData)
-
-        listForScaling = pd.concat(compDataList, ignore_index=True)
-        self.valueScaler = MinMaxScaler(feature_range=(0,1))
-        self.valueScaler.fit(listForScaling)
-
-        pickle.dump(self.valueScaler, open(f'{self.name}Scaler.pkl', "wb"))
 
     def pullCSV(self, ticker, mainDir='MarketTesting/src/markettesting/dataFolder/'):
         if os.path.exists(f'{mainDir}{ticker}.csv'):
@@ -133,15 +98,6 @@ class LTSMModel:
     def trainModel(self, useDownload=True, useOldScaler=False):
         dataList = pd.read_csv('MarketTesting/src/markettesting/tickers.csv')
         dataList = dataList['Symbol']
-        
-        if (os.path.exists(f"{self.name}Scaler.pkl") and useOldScaler):
-            print("An old scaler is availaible and will be used")
-            #TODO: This code throws a bug with pickle loading
-            self.valueScaler = pickle.load(open(f"{self.name}Scaler.pkl", "rb"))
-        else:
-            print("No scaler exists or old one will not be used!")
-            print("Creating a new scaler...")
-            self.identifyScaler(useDownload=useDownload)
 
         for ticker in dataList:
             print(f'     Current Ticker: {ticker}')
@@ -158,11 +114,16 @@ class LTSMModel:
 
             #SCALING
             # scaler = MinMaxScaler(feature_range=(0,1))
-
+            scaler = StandardScaler()
 
             #This uses global scaling based on the whole dataset to check proper values
-            scaledData = self.valueScaler.transform(rawData)
+
+            # scaledData = self.valueScaler.transform(rawData)
+            scaledData = scaler.fit_transform(rawData)
             scaledData = pd.DataFrame(scaledData, columns=rawData.columns)
+
+            #TODO:Remove before use
+            print(scaledData.describe())
 
             #ORGANIZING
             xFull, yFull = self.dataSequence(scaledData)
