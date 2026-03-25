@@ -137,7 +137,7 @@ class LTSMModel:
         if (os.path.exists(f"{self.name}Scaler.pkl") and useOldScaler):
             print("An old scaler is availaible and will be used")
             #TODO: This code throws a bug with pickle loading
-            self.valueScaler = pickle.load(f"{self.name}Scaler.pkl")
+            self.valueScaler = pickle.load(open(f"{self.name}Scaler.pkl", "rb"))
         else:
             print("No scaler exists or old one will not be used!")
             print("Creating a new scaler...")
