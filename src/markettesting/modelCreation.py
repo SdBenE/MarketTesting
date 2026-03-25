@@ -99,9 +99,9 @@ class LTSMModel:
                 emptyTickerTolerance = 0
                 compDataList.append(rawData)
 
-            listForScaling = pd.concat(compDataList, ignore_index=True)
-            self.valueScaler = MinMaxScaler(feature_range=(0,1))
-            self.valueScaler.fit(listForScaling)
+        listForScaling = pd.concat(compDataList, ignore_index=True)
+        self.valueScaler = MinMaxScaler(feature_range=(0,1))
+        self.valueScaler.fit(listForScaling)
 
         pickle.dump(self.valueScaler, open(f'{self.name}Scaler.pkl', "wb"))
 
@@ -136,7 +136,8 @@ class LTSMModel:
         
         if (os.path.exists(f"{self.name}Scaler.pkl") and useOldScaler):
             print("An old scaler is availaible and will be used")
-            self.valueScaler = pickle.load(f"{self.name}Scaler.pkl", "rb")
+            #TODO: This code throws a bug with pickle loading
+            self.valueScaler = pickle.load(f"{self.name}Scaler.pkl")
         else:
             print("No scaler exists or old one will not be used!")
             print("Creating a new scaler...")
@@ -160,7 +161,7 @@ class LTSMModel:
 
 
             #This uses global scaling based on the whole dataset to check proper values
-            scaledData = self.valueScaler.fit_transform(rawData)
+            scaledData = self.valueScaler.transform(rawData)
             scaledData = pd.DataFrame(scaledData, columns=rawData.columns)
 
             #ORGANIZING

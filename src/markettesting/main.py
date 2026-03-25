@@ -45,7 +45,7 @@ frontend.intro()
 
 myModel = modelCreation.LTSMModel(epochs=25, units=1000)
 myModel.createModel(sequenceLength=100)
-myModel.trainModel(useDownload=True)
+myModel.trainModel(useDownload=True, useOldScaler=False)
 
 
 # print(f"NP DATASET: {myData}\n")
