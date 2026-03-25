@@ -10,6 +10,7 @@ import dataFinder
 import tensorflow as tf
 import formatting
 import keras
+import pickle
 from datetime import date
 from keras.models import Sequential, load_model
 from keras.layers import LSTM, Dense, Dropout
@@ -50,6 +51,14 @@ class LTSMModel:
         )
 
         self.model.compile(optimizer='adam', loss='mean_squared_error')
+
+    def getPrediction(self, inputData):
+        if len(inputData) != self.sequenceLength:
+            raise ValueError(f"getPrediction: Input data shape must match model's sequenceLength in:{len(inputData)} model:{self.sequenceLength}")
+        
+
+
+        
 
     def dataSequence(self, trainingData):
         xList = []
@@ -93,6 +102,27 @@ class LTSMModel:
     def trainModel(self, useDownload=True):
         dataList = pd.read_csv('MarketTesting/src/markettesting/tickers.csv')
         dataList = dataList['Symbol']
+        
+        print("BEGINNING COMPREHENSIVE SCALER COMPOSITION...")
+
+        compDataList = []
+
+        for ticker in dataList:
+            if useDownload:
+                rawData = self.pullCSV(ticker)
+            else:
+                rawData = self.pullYF(ticker)
+
+            if rawData.empty() or len(rawData) <= 100:
+                print(f"Ticker {ticker} is too short, skipping ticker...")
+            else:
+                compDataList.append(rawData)
+
+            listForScaling = pd.concat(compDataList, ignore_index=True)
+            self.valueScaler = MinMaxScaler(feature_range=(0,1))
+            self.valueScaler.fit()
+            
+
 
         for ticker in dataList:
             print(f'     Current Ticker: {ticker}')
@@ -113,6 +143,7 @@ class LTSMModel:
             scaledData = scaler.fit_transform(rawData)
             scaledData = pd.DataFrame(scaledData, columns=rawData.columns)
 
+            
 
             #ORGANIZING
             xFull, yFull = self.dataSequence(scaledData)
