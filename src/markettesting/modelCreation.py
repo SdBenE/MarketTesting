@@ -122,9 +122,6 @@ class LTSMModel:
             scaledData = scaler.fit_transform(rawData)
             scaledData = pd.DataFrame(scaledData, columns=rawData.columns)
 
-            #TODO:Remove before use
-            print(scaledData.describe())
-
             #ORGANIZING
             xFull, yFull = self.dataSequence(scaledData)
 
@@ -140,13 +137,10 @@ class LTSMModel:
                 xTrain, 
                 yTrain, 
                 epochs=self.epochs, 
-                batch_size=256, 
+                batch_size=2048, 
                 callbacks=[self.earlyStopSystem],
                 validation_data=(xTest, yTest)
             )
-
-            print(f'CLASS SIZE: {sys.getsizeof(self)} bytes')
-            print(f'MODEL SIZE: {sys.getsizeof(self.model)} bytes')
 
         self.model.save(f'MarketTesting/src/markettesting/{self.name}.keras')
 
