@@ -1,16 +1,11 @@
 import yfinance as yf
-import sys
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import os
-import dataFinder
 import tensorflow as tf
-import formatting
-from datetime import date
 from keras.models import Sequential, load_model
 from keras.layers import LSTM, Dense, Dropout
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.preprocessing import StandardScaler
 from keras.callbacks import EarlyStopping
 
 class StockModel:
@@ -19,18 +14,20 @@ class StockModel:
         self.model = Sequential()
         self.epochs = epochs
         self.units = units
-        self.predictionTable = None
+        self.prediction_table = None
         self.scaler = None
 
-    def importModel(self):
+    def import_model(self):
         self.model = load_model(f"{self.name}.keras")
 
-    def createModel(self, durationYears=1, sequenceLength=100, numFeatures=5):
-        self.timePeriod = f"{durationYears}y"
-        self.sequenceLength = sequenceLength
+    def createModel(self, durationYears=1, sequence_length=100, num_features=5):
+        self.time_period = f"{durationYears}y"
+        self.sequence_length = sequence_length
 
         #Layer 1
-        self.model.add(LSTM(units=self.units, return_sequences=True, input_shape=(self.sequenceLength, numFeatures)))
+        self.model.add(LSTM(units=self.units,
+                            return_sequences=True,
+                            input_shape=(self.sequence_length, num_features)))
         self.model.add(Dropout(0.2))
 
         #Layer 2
@@ -42,7 +39,7 @@ class StockModel:
 
         self.model.add(Dense(units=1))
 
-        self.earlyStopSystem = EarlyStopping(
+        self.early_stop_system = EarlyStopping(
             monitor='val_loss',
             patience=5,
             restore_best_weights=True
@@ -51,10 +48,8 @@ class StockModel:
         self.model.compile(optimizer='adam', loss='mean_squared_error')
 
     def getPrediction(self, inputData):
-        #TODO: Complete Prediction method
-        #TODO: Identify dense layer changes with numFeatures
-        if len(inputData) != self.sequenceLength:
-            raise ValueError(f"getPrediction: Input data shape must match model's sequenceLength in:{len(inputData)} model:{self.sequenceLength}")
+        if len(inputData) != self.sequence_length:
+            raise ValueError(f"getPrediction: Incorrect sequence_length in:{len(inputData)} model:{self.sequence_length}")
         
     def dataSequence(self, trainingData):
         xList = []
@@ -62,7 +57,7 @@ class StockModel:
         
         i = 0
 
-        for j in range(self.sequenceLength, len(trainingData)):
+        for j in range(self.sequence_length, len(trainingData)):
             xList.append(trainingData.iloc[i:j])
 
             yList.append(trainingData.at[j, 'Close']) #Adds the following day to it
@@ -85,7 +80,7 @@ class StockModel:
         return dataSet
         
     def pullYF(self, ticker):
-        dataSet = yf.download(ticker, period=self.timePeriod)
+        dataSet = yf.download(ticker, period=self.time_period)
         dataSet = dataSet.reset_index(drop=True) 
 
         if len(dataSet) < 10:
@@ -133,12 +128,12 @@ class StockModel:
             xTest = xFull[splitIndex+1:]
             yTest = yFull[splitIndex+1:]
 
-            history = self.model.fit(
+            self.model.fit(
                 xTrain, 
                 yTrain, 
                 epochs=self.epochs, 
                 batch_size=2048, 
-                callbacks=[self.earlyStopSystem],
+                callbacks=[self.early_stop_system],
                 validation_data=(xTest, yTest)
             )
 
