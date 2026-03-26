@@ -140,7 +140,7 @@ class LTSMModel:
                 xTrain, 
                 yTrain, 
                 epochs=self.epochs, 
-                batch_size=32, 
+                batch_size=256, 
                 callbacks=[self.earlyStopSystem],
                 validation_data=(xTest, yTest)
             )
