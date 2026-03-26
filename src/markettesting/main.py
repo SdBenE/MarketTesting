@@ -1,15 +1,5 @@
-import yfinance as yf
-import csv
-import pandas as pd
-import matplotlib.pyplot as plt
-import os
-import dataFinder
-import tensorflow as tf
-import formatting
-import modelCreation
+import model_creation
 import frontend
-from keras.models import Sequential
-from keras.layers import LSTM, Dense, Dropout
 import warnings
 
 warnings.filterwarnings('ignore')
@@ -43,9 +33,9 @@ frontend.intro()
 
 # formatting.fileFormation(4, downLoad=True)
 
-myModel = modelCreation.StockModel(epochs=25, units=1000)
-myModel.createModel(sequence_length=100)
-myModel.trainModel(use_download=True)
+myModel = model_creation.StockModel(epochs=25, units=1000)
+myModel.create_model(sequence_length=100)
+myModel.train_model(use_download=True)
 
 
 # print(f"NP DATASET: {myData}\n")

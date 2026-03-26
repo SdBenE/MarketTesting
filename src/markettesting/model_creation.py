@@ -20,7 +20,7 @@ class StockModel:
     def import_model(self):
         self.model = load_model(f"{self.name}.keras")
 
-    def createModel(self, duration_years=1, sequence_length=100, num_features=5):
+    def create_model(self, duration_years=1, sequence_length=100, num_features=5):
         self.time_period = f"{duration_years}y"
         self.sequence_length = sequence_length
 
@@ -47,14 +47,13 @@ class StockModel:
 
         self.model.compile(optimizer='adam', loss='mean_squared_error')
 
-    def getPrediction(self, input_data):
+    def get_prediction(self, input_data):
         if len(input_data) != self.sequence_length:
-            raise ValueError(f"getPrediction: Incorrect sequence_length in:{len(input_data)} model:{self.sequence_length}")
-        
-    def dataSequence(self, training_data):
+            raise ValueError(f"get_prediction: Incorrect sequence_length")
+    
+    def data_sequence(self, training_data):
         x_list = []
         y_list = []
-        
         i = 0
 
         for j in range(self.sequence_length, len(training_data)):
@@ -65,7 +64,7 @@ class StockModel:
 
         return np.array(x_list), np.array(y_list)
 
-    def pullCSV(self, ticker, main_dir='MarketTesting/src/markettesting/dataFolder/'):
+    def pull_csv(self, ticker, main_dir='MarketTesting/src/markettesting/dataFolder/'):
         if os.path.exists(f'{main_dir}{ticker}.csv'):
             data_set = pd.read_csv(f'{main_dir}{ticker}.csv')
         else:
@@ -78,10 +77,10 @@ class StockModel:
         data_set = data_set.drop(labels='Price', axis=1)
         data_set.columns = ['Close', 'High', 'Low', 'Open', 'Volume']
         return data_set
-        
-    def pullYF(self, ticker):
+    
+    def pull_yf(self, ticker):
         data_set = yf.download(ticker, period=self.time_period)
-        data_set = data_set.reset_index(drop=True) 
+        data_set = data_set.reset_index(drop=True)
 
         if len(data_set) < 10:
             return None
@@ -90,7 +89,7 @@ class StockModel:
         data_set.columns = ['Close', 'High', 'Low', 'Open', 'Volume']
         return data_set
 
-    def trainModel(self, use_download=True):
+    def train_model(self, use_download=True):
         data_list = pd.read_csv('MarketTesting/src/markettesting/tickers.csv')
         data_list = data_list['Symbol']
 
@@ -98,9 +97,9 @@ class StockModel:
             print(f'     Current Ticker: {ticker}')
 
             if use_download:
-                raw_data = self.pullCSV(ticker)
+                raw_data = self.pull_csv(ticker)
             else:
-                raw_data = self.pullYF(ticker)
+                raw_data = self.pull_yf(ticker)
 
             if raw_data is None or len(raw_data) < 100:
                 print(f"Ticker {ticker} is too small or doesn't exist")
@@ -118,7 +117,7 @@ class StockModel:
             scaled_data = pd.DataFrame(scaled_data, columns=raw_data.columns)
 
             #ORGANIZING
-            x_full, y_full = self.dataSequence(scaled_data)
+            x_full, y_full = self.data_sequence(scaled_data)
 
             #SPLITTING DATA
             split_index = int(0.8 * len(y_full)) #Integer casting for proper index
@@ -129,14 +128,12 @@ class StockModel:
             y_test = y_full[split_index+1:]
 
             self.model.fit(
-                x_train, 
-                y_train, 
-                epochs=self.epochs, 
-                batch_size=2048, 
+                x_train,
+                y_train,
+                epochs=self.epochs,
+                batch_size=2048,
                 callbacks=[self.early_stop_system],
                 validation_data=(x_test, y_test)
             )
 
         self.model.save(f'MarketTesting/src/markettesting/{self.name}.keras')
-
-    # def getPrediction(self):

@@ -1,5 +1,5 @@
 import formatting
-import modelCreation
+import model_creation
 
 def listHelp():
     print("format : Allows you to format your tickers to prevent empty data for model entry")
@@ -21,7 +21,7 @@ def checkInput(entry):
         if entry2 == 'create':
             entry3 = input('<MODEL CREATE> Enter the number of epochs and units for the model, separated by spaces: ')
             epochCount, unitCount = entry3.split()
-            currentModel = modelCreation.LTSMModel(epochs=int(epochCount), units=int(unitCount))
+            currentModel = model_creation.StockModel(epochs=int(epochCount), units=int(unitCount))
     else:
         print(f'[ERROR!] : Entry {entry} was invalid!')
 
