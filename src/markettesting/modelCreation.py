@@ -13,7 +13,7 @@ from keras.layers import LSTM, Dense, Dropout
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from keras.callbacks import EarlyStopping
 
-class LTSMModel:
+class StockModel:
     def __init__(self, epochs=25, units=50, name="StockModel"):
         self.name = name
         self.model = Sequential()
