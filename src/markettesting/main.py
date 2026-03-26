@@ -43,7 +43,7 @@ frontend.intro()
 
 # formatting.fileFormation(4, downLoad=True)
 
-myModel = modelCreation.LTSMModel(epochs=25, units=1000)
+myModel = modelCreation.StockModel(epochs=25, units=1000)
 myModel.createModel(sequenceLength=100)
 myModel.trainModel(useDownload=True, useOldScaler=True)
 
