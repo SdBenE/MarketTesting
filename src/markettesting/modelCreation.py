@@ -20,8 +20,8 @@ class StockModel:
     def import_model(self):
         self.model = load_model(f"{self.name}.keras")
 
-    def createModel(self, durationYears=1, sequence_length=100, num_features=5):
-        self.time_period = f"{durationYears}y"
+    def createModel(self, duration_years=1, sequence_length=100, num_features=5):
+        self.time_period = f"{duration_years}y"
         self.sequence_length = sequence_length
 
         #Layer 1
@@ -47,62 +47,62 @@ class StockModel:
 
         self.model.compile(optimizer='adam', loss='mean_squared_error')
 
-    def getPrediction(self, inputData):
-        if len(inputData) != self.sequence_length:
-            raise ValueError(f"getPrediction: Incorrect sequence_length in:{len(inputData)} model:{self.sequence_length}")
+    def getPrediction(self, input_data):
+        if len(input_data) != self.sequence_length:
+            raise ValueError(f"getPrediction: Incorrect sequence_length in:{len(input_data)} model:{self.sequence_length}")
         
-    def dataSequence(self, trainingData):
-        xList = []
-        yList = []
+    def dataSequence(self, training_data):
+        x_list = []
+        y_list = []
         
         i = 0
 
-        for j in range(self.sequence_length, len(trainingData)):
-            xList.append(trainingData.iloc[i:j])
+        for j in range(self.sequence_length, len(training_data)):
+            x_list.append(training_data.iloc[i:j])
 
-            yList.append(trainingData.at[j, 'Close']) #Adds the following day to it
+            y_list.append(training_data.at[j, 'Close']) #Adds the following day to it
             i+=1
 
-        return np.array(xList), np.array(yList)
+        return np.array(x_list), np.array(y_list)
 
-    def pullCSV(self, ticker, mainDir='MarketTesting/src/markettesting/dataFolder/'):
-        if os.path.exists(f'{mainDir}{ticker}.csv'):
-            dataSet = pd.read_csv(f'{mainDir}{ticker}.csv')
+    def pullCSV(self, ticker, main_dir='MarketTesting/src/markettesting/dataFolder/'):
+        if os.path.exists(f'{main_dir}{ticker}.csv'):
+            data_set = pd.read_csv(f'{main_dir}{ticker}.csv')
         else:
             return None
 
-        dataSet = dataSet.iloc[2:].copy()
-        dataSet.columns = dataSet.columns.get_level_values(0)
-        dataSet = dataSet.reset_index(drop=True)
+        data_set = data_set.iloc[2:].copy()
+        data_set.columns = data_set.columns.get_level_values(0)
+        data_set = data_set.reset_index(drop=True)
 
-        dataSet = dataSet.drop(labels='Price', axis=1)
-        dataSet.columns = ['Close', 'High', 'Low', 'Open', 'Volume']
-        return dataSet
+        data_set = data_set.drop(labels='Price', axis=1)
+        data_set.columns = ['Close', 'High', 'Low', 'Open', 'Volume']
+        return data_set
         
     def pullYF(self, ticker):
-        dataSet = yf.download(ticker, period=self.time_period)
-        dataSet = dataSet.reset_index(drop=True) 
+        data_set = yf.download(ticker, period=self.time_period)
+        data_set = data_set.reset_index(drop=True) 
 
-        if len(dataSet) < 10:
+        if len(data_set) < 10:
             return None
 
-        dataSet.columns = dataSet.columns.get_level_values(0)
-        dataSet.columns = ['Close', 'High', 'Low', 'Open', 'Volume']
-        return dataSet
+        data_set.columns = data_set.columns.get_level_values(0)
+        data_set.columns = ['Close', 'High', 'Low', 'Open', 'Volume']
+        return data_set
 
-    def trainModel(self, useDownload=True, useOldScaler=False):
-        dataList = pd.read_csv('MarketTesting/src/markettesting/tickers.csv')
-        dataList = dataList['Symbol']
+    def trainModel(self, use_download=True):
+        data_list = pd.read_csv('MarketTesting/src/markettesting/tickers.csv')
+        data_list = data_list['Symbol']
 
-        for ticker in dataList:
+        for ticker in data_list:
             print(f'     Current Ticker: {ticker}')
 
-            if useDownload:
-                rawData = self.pullCSV(ticker)
+            if use_download:
+                raw_data = self.pullCSV(ticker)
             else:
-                rawData = self.pullYF(ticker)
+                raw_data = self.pullYF(ticker)
 
-            if rawData is None or len(rawData) < 100:
+            if raw_data is None or len(raw_data) < 100:
                 print(f"Ticker {ticker} is too small or doesn't exist")
                 print(f"Skipping {ticker}...")
                 continue
@@ -111,30 +111,30 @@ class StockModel:
             # scaler = MinMaxScaler(feature_range=(0,1))
             scaler = StandardScaler()
 
-            #This uses global scaling based on the whole dataset to check proper values
+            #This uses global scaling based on the whole data_set to check proper values
 
-            # scaledData = self.valueScaler.transform(rawData)
-            scaledData = scaler.fit_transform(rawData)
-            scaledData = pd.DataFrame(scaledData, columns=rawData.columns)
+            # scaled_data = self.valueScaler.transform(raw_data)
+            scaled_data = scaler.fit_transform(raw_data)
+            scaled_data = pd.DataFrame(scaled_data, columns=raw_data.columns)
 
             #ORGANIZING
-            xFull, yFull = self.dataSequence(scaledData)
+            x_full, y_full = self.dataSequence(scaled_data)
 
             #SPLITTING DATA
-            splitIndex = int(0.8 * len(yFull)) #Integer casting for proper index
+            split_index = int(0.8 * len(y_full)) #Integer casting for proper index
 
-            xTrain = xFull[:splitIndex]
-            yTrain = yFull[:splitIndex]
-            xTest = xFull[splitIndex+1:]
-            yTest = yFull[splitIndex+1:]
+            x_train = x_full[:split_index]
+            y_train = y_full[:split_index]
+            x_test = x_full[split_index+1:]
+            y_test = y_full[split_index+1:]
 
             self.model.fit(
-                xTrain, 
-                yTrain, 
+                x_train, 
+                y_train, 
                 epochs=self.epochs, 
                 batch_size=2048, 
                 callbacks=[self.early_stop_system],
-                validation_data=(xTest, yTest)
+                validation_data=(x_test, y_test)
             )
 
         self.model.save(f'MarketTesting/src/markettesting/{self.name}.keras')
