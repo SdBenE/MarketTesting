@@ -1,3 +1,8 @@
+"""
+Global Configuration of file paths
+between methods
+"""
+
 from pathlib import Path
 
 BASE_DIRECTORY = Path(__file__).parent

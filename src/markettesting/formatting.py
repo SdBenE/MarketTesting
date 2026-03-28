@@ -1,35 +1,24 @@
-from config import BASE_DIRECTORY, DATA_FOLDER_DIR, TICKER_DIR
+"""
+Training data formatting, graphing, and downloading
+"""
+
+import time
+import os
 import yfinance as yf
 import pandas as pd
-import matplotlib.pyplot as plt
-import os
-import numpy as np
-import time
+from config import DATA_FOLDER_DIR, TICKER_DIR
+
+def file_formation(period_years=1, download=False):
+    """
+    Retrive training files for use in model training
+    """
+    data_list = pd.read_csv(TICKER_DIR)
+    temp_data_list = data_list
+    print(data_list)
+    symbols = data_list['Symbol']
 
 
-def graphData(tickerName):
-    target_dir = DATA_FOLDER_DIR / f"{tickerName}.csv"
-
-    table = np.genfromtxt(target_dir,delimiter=',', dtype=None, encoding=None)
-    print(table)
-    xAxis = list(range(0, len(table[2:,0])))
-    yAxis = table[2:,0]
-
-    yAxis = yAxis.astype(np.float64)
-
-    plt.plot(xAxis, yAxis)
-
-    
-    plt.show()
-
-def fileFormation(periodYears=1, downLoad=False):
-    dataList = pd.read_csv(TICKER_DIR)
-    tempDataList = dataList
-    print(dataList)
-    symbols = dataList['Symbol']
-
-
-    duration = f"{periodYears}y"
+    duration = f"{period_years}y"
 
     # emptyTickers = []
 
@@ -40,28 +29,27 @@ def fileFormation(periodYears=1, downLoad=False):
         if os.path.exists(DATA_FOLDER_DIR / f'{ticker}.csv'):
             print(f'File {ticker}.csv already exists! Skipping...')
             continue
-        
+
         print(f"      CURRENT TICKER {ticker}      ")
-        
+
         start = time.perf_counter()
-        
-        myTicker = yf.download(ticker, period=duration)
-        # myTicker.columns = [None] * len(myTicker.columns)
+
+        my_ticker = yf.download(ticker, period=duration)
+        # my_ticker.columns = [None] * len(my_ticker.columns)
 
         print(f"Download completed in {time.perf_counter() - start} [s]")
 
-        if myTicker.empty or len(myTicker) < 10:
+        if my_ticker.empty or len(my_ticker) < 10:
             print(f"[[{ticker}]] : TOOOOOO SMALLLLLLLL BYE BYE")
             # emptyTickers.append(ticker)
 
-            dropIndex = tempDataList[dataList['Symbol'] == ticker].index
-            tempDataList = tempDataList.drop(dropIndex)
-        elif downLoad:
-            
-            myTicker.to_csv(DATA_FOLDER_DIR / f'{ticker}.csv')
+            drop_index = temp_data_list[data_list['Symbol'] == ticker].index
+            temp_data_list = temp_data_list.drop(drop_index)
+        elif download:
+            my_ticker.to_csv(DATA_FOLDER_DIR / f'{ticker}.csv')
 
         # print(emptyTickers)
-        print(f"Datalist Length: {len(tempDataList)}")
-        # print(tempDataList)
-    
-    tempDataList.to_csv(TICKER_DIR)
+        print(f"data_list Length: {len(temp_data_list)}")
+        # print(temp_data_list)
+
+    temp_data_list.to_csv(TICKER_DIR)
