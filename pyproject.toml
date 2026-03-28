@@ -6,12 +6,12 @@ build-backend = "setuptools.build_meta"
 name = "markettesting"
 version = "0.0.1"
 description = "Stock Market Training"
-requires-python = ">=3.8"
+requires-python = ">=3.1"
 dependencies = [
     "pandas>=1.0.0",
     "tensorflow>=1.0.0",
     "yfinance>=0.2.66",
-    "numpy>=2.3.4",
+    "numpy>=2.0.0",
     "pandas>=2.3.3",
     "yfinance>=0.2.66",
     "matplotlib>=3.10.7",
