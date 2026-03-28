@@ -34,9 +34,9 @@ class StockModel:
             restore_best_weights=True
         )
 
-    def import_model(self):
+    def import_model(self, model_directory="StockModel.keras"):
         """Imports model in .keras format"""
-        self.model = load_model(BASE_DIRECTORY / f"StockModel.keras")
+        self.model = load_model(BASE_DIRECTORY / model_directory)
 
     def create_model(self):
         """
@@ -97,7 +97,7 @@ class StockModel:
         data_set = data_set.drop(labels='Price', axis=1)
         data_set.columns = ['Close', 'High', 'Low', 'Open', 'Volume']
         return data_set
-    
+
     def pull_yf(self, ticker):
         """
         Fetches stock data from yfinance api
@@ -136,16 +136,10 @@ class StockModel:
                 continue
 
             #SCALING
-            # scaler = MinMaxScaler(feature_range=(0,1))
-            scaler = StandardScaler()
-
-            #This uses global scaling based on the whole data_set to check proper values
-
-            # scaled_data = self.valueScaler.transform(raw_data)
-            scaled_data = scaler.fit_transform(raw_data)
+            scaled_data = StandardScaler().fit_transform(raw_data)
             scaled_data = pd.DataFrame(scaled_data, columns=raw_data.columns)
 
-            #ORGANIZING
+            #WINDOWING
             x_full, y_full = self.data_sequence(scaled_data)
 
             #SPLITTING DATA

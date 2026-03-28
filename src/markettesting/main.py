@@ -2,7 +2,7 @@
 Base main testing
 """
 import warnings
-from StockModel import StockModel
+from stock_model import StockModel
 
 warnings.filterwarnings('ignore')
 

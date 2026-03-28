@@ -20,3 +20,12 @@ dependencies = [
 [tool.setuptools]
 package-dir = {"" = "src"}
 packages = ["markettesting"]
+
+[project.optional-dependencies]
+dev = [
+    "pylint",
+    "pytest",
+]
+
+[tool.pylint.main]
+source-roots = ["src"]
