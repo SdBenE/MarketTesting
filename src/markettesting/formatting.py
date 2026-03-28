@@ -1,12 +1,8 @@
 import yfinance as yf
-import csv
 import pandas as pd
-import matplotlib
 import matplotlib.pyplot as plt
 import os
-import dataFinder
 import numpy as np
-import tensorflow as tf
 import time
 
 
