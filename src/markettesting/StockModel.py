@@ -12,20 +12,24 @@ from sklearn.preprocessing import StandardScaler
 from config import BASE_DIRECTORY, DATA_FOLDER_DIR, TICKER_DIR
 
 class StockModel:
-    def __init__(self, epochs=25, units=50, name="StockModel", sequence_length=100, num_features=5):
+    """
+    DEFAULT STOCK MODEL FOR MARKETTESTING
+    """
+    def __init__(self, name="StockModel", sequence_length=100, num_features=5, time_period ='4y'):
         """
         Default constructor for StockModel
         """
         self.name = name
+        self.time_period = time_period
         self.model = Sequential()
-        self.epochs = epochs
-        self.units = units
+        self.epochs = 25
+        self.units = 1000
         self.num_features= num_features
         self.sequence_length = sequence_length
         self.prediction_table = None
         self.scaler = None
 
-        self.create_model(sequence_length=self.sequence_length, num_features=self.num_features)
+        self.create_model()
 
         self.early_stop_system = EarlyStopping(
             monitor='val_loss',
@@ -34,9 +38,10 @@ class StockModel:
         )
 
     def import_model(self):
+        """Imports model in .keras format"""
         self.model = load_model(BASE_DIRECTORY / f"{self.name}.keras")
 
-    def create_model(self, sequence_length=100, num_features=5):
+    def create_model(self):
         """
         Creates default LSTM model for StockModel Class
         Stored in self.model
@@ -44,7 +49,7 @@ class StockModel:
         #Layer 1
         self.model.add(LSTM(units=self.units,
                             return_sequences=True,
-                            input_shape=(self.sequence_length, num_features)))
+                            input_shape=(self.sequence_length, self.num_features)))
         self.model.add(Dropout(0.2))
 
         #Layer 2
@@ -61,7 +66,7 @@ class StockModel:
     def get_prediction(self, input_data):
         """Getter for predictions"""
         if len(input_data) != self.sequence_length:
-            raise ValueError(f"get_prediction: Incorrect sequence_length")
+            raise ValueError("get_prediction: Incorrect sequence_length")
     
     def data_sequence(self, training_data):
         """
@@ -82,9 +87,9 @@ class StockModel:
 
     def pull_csv(self, ticker, main_dir=DATA_FOLDER_DIR):
         """Pulls downloaded stock data in .csv format"""
-
-        if os.path.exists(DATA_FOLDER_DIR / f"{ticker}.csv"):
-            data_set = pd.read_csv(DATA_FOLDER_DIR / f'{ticker}.csv')
+        csv_dir = main_dir / f"{ticker}.csv"
+        if os.path.exists(csv_dir):
+            data_set = pd.read_csv(csv_dir)
         else:
             return None
 
