@@ -15,19 +15,16 @@ class StockModel:
     """
     DEFAULT STOCK MODEL FOR MARKETTESTING
     """
-    def __init__(self, name="StockModel", sequence_length=100, num_features=5, time_period ='4y'):
+    def __init__(self, sequence_length=100, num_features=5, time_period ='4y'):
         """
         Default constructor for StockModel
         """
-        self.name = name
         self.time_period = time_period
         self.model = Sequential()
         self.epochs = 25
         self.units = 1000
-        self.num_features= num_features
+        self.num_features = num_features
         self.sequence_length = sequence_length
-        self.prediction_table = None
-        self.scaler = None
 
         self.create_model()
 
@@ -39,7 +36,7 @@ class StockModel:
 
     def import_model(self):
         """Imports model in .keras format"""
-        self.model = load_model(BASE_DIRECTORY / f"{self.name}.keras")
+        self.model = load_model(BASE_DIRECTORY / f"StockModel.keras")
 
     def create_model(self):
         """
@@ -117,7 +114,7 @@ class StockModel:
         data_set.columns = ['Close', 'High', 'Low', 'Open', 'Volume']
         return data_set
 
-    def train_model(self, use_download=True):
+    def train_model(self, use_download=True, save_dir="StockModel", batch_size=128):
         """
         StockModel preprocessing and data push-through
         """
@@ -163,9 +160,9 @@ class StockModel:
                 x_train,
                 y_train,
                 epochs=self.epochs,
-                batch_size=2048,
+                batch_size=batch_size,
                 callbacks=[self.early_stop_system],
                 validation_data=(x_test, y_test)
             )
 
-        self.model.save(BASE_DIRECTORY / f'{self.name}.keras')
+        self.model.save(BASE_DIRECTORY / f'{save_dir}.keras')
