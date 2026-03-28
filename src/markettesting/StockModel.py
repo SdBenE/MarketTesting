@@ -1,29 +1,46 @@
-from config import BASE_DIRECTORY, DATA_FOLDER_DIR, TICKER_DIR
+"""
+STOCK MODEL CLASS
+"""
+import os
 import yfinance as yf
 import numpy as np
 import pandas as pd
-import os
 from keras.models import Sequential, load_model
 from keras.layers import LSTM, Dense, Dropout
-from sklearn.preprocessing import StandardScaler
 from keras.callbacks import EarlyStopping
+from sklearn.preprocessing import StandardScaler
+from config import BASE_DIRECTORY, DATA_FOLDER_DIR, TICKER_DIR
 
 class StockModel:
-    def __init__(self, epochs=25, units=50, name="StockModel"):
+    def __init__(self, epochs=25, units=50, name="StockModel", sequence_length=100, num_features=5):
+        """
+        Default constructor for StockModel
+        """
         self.name = name
         self.model = Sequential()
         self.epochs = epochs
         self.units = units
+        self.num_features= num_features
+        self.sequence_length = sequence_length
         self.prediction_table = None
         self.scaler = None
+
+        self.create_model(sequence_length=self.sequence_length, num_features=self.num_features)
+
+        self.early_stop_system = EarlyStopping(
+            monitor='val_loss',
+            patience=5,
+            restore_best_weights=True
+        )
 
     def import_model(self):
         self.model = load_model(BASE_DIRECTORY / f"{self.name}.keras")
 
-    def create_model(self, duration_years=1, sequence_length=100, num_features=5):
-        self.time_period = f"{duration_years}y"
-        self.sequence_length = sequence_length
-
+    def create_model(self, sequence_length=100, num_features=5):
+        """
+        Creates default LSTM model for StockModel Class
+        Stored in self.model
+        """
         #Layer 1
         self.model.add(LSTM(units=self.units,
                             return_sequences=True,
@@ -39,19 +56,18 @@ class StockModel:
 
         self.model.add(Dense(units=1))
 
-        self.early_stop_system = EarlyStopping(
-            monitor='val_loss',
-            patience=5,
-            restore_best_weights=True
-        )
-
         self.model.compile(optimizer='adam', loss='mean_squared_error')
 
     def get_prediction(self, input_data):
+        """Getter for predictions"""
         if len(input_data) != self.sequence_length:
             raise ValueError(f"get_prediction: Incorrect sequence_length")
     
     def data_sequence(self, training_data):
+        """
+        Sequences time-series data windows for training
+        Bases the size of the windows on stored sequence length field
+        """
         x_list = []
         y_list = []
         i = 0
@@ -65,6 +81,8 @@ class StockModel:
         return np.array(x_list), np.array(y_list)
 
     def pull_csv(self, ticker, main_dir=DATA_FOLDER_DIR):
+        """Pulls downloaded stock data in .csv format"""
+
         if os.path.exists(DATA_FOLDER_DIR / f"{ticker}.csv"):
             data_set = pd.read_csv(DATA_FOLDER_DIR / f'{ticker}.csv')
         else:
@@ -79,6 +97,11 @@ class StockModel:
         return data_set
     
     def pull_yf(self, ticker):
+        """
+        Fetches stock data from yfinance api
+        Reformats table to match desired form for
+        train_model
+        """
         data_set = yf.download(ticker, period=self.time_period)
         data_set = data_set.reset_index(drop=True)
 
@@ -90,6 +113,10 @@ class StockModel:
         return data_set
 
     def train_model(self, use_download=True):
+        """
+        StockModel preprocessing and data push-through
+        """
+
         data_list = pd.read_csv(TICKER_DIR)
         data_list = data_list['Symbol']
 
