@@ -1,3 +1,4 @@
+from config import BASE_DIRECTORY, DATA_FOLDER_DIR, TICKER_DIR
 import yfinance as yf
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -7,7 +8,9 @@ import time
 
 
 def graphData(tickerName):
-    table = np.genfromtxt(f'MarketTesting/src/markettesting/dataFolder/{tickerName}.csv', delimiter=',', dtype=None, encoding=None)
+    target_dir = DATA_FOLDER_DIR / f"{tickerName}.csv"
+
+    table = np.genfromtxt(target_dir,delimiter=',', dtype=None, encoding=None)
     print(table)
     xAxis = list(range(0, len(table[2:,0])))
     yAxis = table[2:,0]
@@ -20,7 +23,7 @@ def graphData(tickerName):
     plt.show()
 
 def fileFormation(periodYears=1, downLoad=False):
-    dataList = pd.read_csv('MarketTesting/src/markettesting/tickers.csv')
+    dataList = pd.read_csv(TICKER_DIR)
     tempDataList = dataList
     print(dataList)
     symbols = dataList['Symbol']
@@ -34,7 +37,7 @@ def fileFormation(periodYears=1, downLoad=False):
     #     os.makedirs("/MarketTesting/src/markettesting/dataFolder", exist_ok=True)
 
     for ticker in symbols:
-        if os.path.exists(f'MarketTesting/src/markettesting/dataFolder/{ticker}.csv'):
+        if os.path.exists(DATA_FOLDER_DIR / f'{ticker}.csv'):
             print(f'File {ticker}.csv already exists! Skipping...')
             continue
         
@@ -55,10 +58,10 @@ def fileFormation(periodYears=1, downLoad=False):
             tempDataList = tempDataList.drop(dropIndex)
         elif downLoad:
             
-            myTicker.to_csv(f'MarketTesting/src/markettesting/dataFolder/{ticker}.csv')
+            myTicker.to_csv(DATA_FOLDER_DIR / f'{ticker}.csv')
 
         # print(emptyTickers)
         print(f"Datalist Length: {len(tempDataList)}")
         # print(tempDataList)
     
-    tempDataList.to_csv('/home/enjamin_lmore/tf-env/MarketTesting/src/markettesting/tickers.csv')
+    tempDataList.to_csv(TICKER_DIR)

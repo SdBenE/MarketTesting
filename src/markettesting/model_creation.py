@@ -1,8 +1,8 @@
+from config import BASE_DIRECTORY, DATA_FOLDER_DIR, TICKER_DIR
 import yfinance as yf
 import numpy as np
 import pandas as pd
 import os
-import tensorflow as tf
 from keras.models import Sequential, load_model
 from keras.layers import LSTM, Dense, Dropout
 from sklearn.preprocessing import StandardScaler
@@ -18,7 +18,7 @@ class StockModel:
         self.scaler = None
 
     def import_model(self):
-        self.model = load_model(f"{self.name}.keras")
+        self.model = load_model(BASE_DIRECTORY / f"{self.name}.keras")
 
     def create_model(self, duration_years=1, sequence_length=100, num_features=5):
         self.time_period = f"{duration_years}y"
@@ -64,9 +64,9 @@ class StockModel:
 
         return np.array(x_list), np.array(y_list)
 
-    def pull_csv(self, ticker, main_dir='MarketTesting/src/markettesting/dataFolder/'):
-        if os.path.exists(f'{main_dir}{ticker}.csv'):
-            data_set = pd.read_csv(f'{main_dir}{ticker}.csv')
+    def pull_csv(self, ticker, main_dir=DATA_FOLDER_DIR):
+        if os.path.exists(DATA_FOLDER_DIR / f"{ticker}.csv"):
+            data_set = pd.read_csv(DATA_FOLDER_DIR / f'{ticker}.csv')
         else:
             return None
 
@@ -90,7 +90,7 @@ class StockModel:
         return data_set
 
     def train_model(self, use_download=True):
-        data_list = pd.read_csv('MarketTesting/src/markettesting/tickers.csv')
+        data_list = pd.read_csv(TICKER_DIR)
         data_list = data_list['Symbol']
 
         for ticker in data_list:
@@ -136,4 +136,4 @@ class StockModel:
                 validation_data=(x_test, y_test)
             )
 
-        self.model.save(f'MarketTesting/src/markettesting/{self.name}.keras')
+        self.model.save(BASE_DIRECTORY / f'{self.name}.keras')
