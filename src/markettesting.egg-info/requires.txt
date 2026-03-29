@@ -1,0 +1,10 @@
+pandas>=1.0.0
+tensorflow>=1.0.0
+yfinance>=0.2.66
+numpy>=1.22.0
+yfinance>=0.2.66
+matplotlib>=3.7.0
+
+[dev]
+pylint
+pytest

@@ -6,7 +6,7 @@ import time
 import os
 import yfinance as yf
 import pandas as pd
-from config import DATA_FOLDER_DIR, TICKER_DIR
+from markettesting.config import DATA_FOLDER_DIR, TICKER_DIR
 
 def file_formation(period_years=1, download=False):
     """
@@ -53,3 +53,11 @@ def file_formation(period_years=1, download=False):
         # print(temp_data_list)
 
     temp_data_list.to_csv(TICKER_DIR)
+
+def flatten_from_yf(data_set):
+    """Flattens data to a format acceptable for StockModel-based models"""
+    data_set = data_set.reset_index(drop=True)
+    data_set.columns = data_set.columns.get_level_values(0)
+    data_set.columns = ['Close', 'High', 'Low', 'Open', 'Volume']
+
+    return data_set
