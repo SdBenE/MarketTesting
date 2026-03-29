@@ -61,3 +61,38 @@ def flatten_from_yf(data_set):
     data_set.columns = ['Close', 'High', 'Low', 'Open', 'Volume']
 
     return data_set
+
+def pull_csv(ticker, main_dir=DATA_FOLDER_DIR):
+    """Pulls downloaded stock data in .csv format"""
+    csv_dir = main_dir / f"{ticker}.csv"
+    if os.path.exists(csv_dir):
+        data_set = pd.read_csv(csv_dir)
+    else:
+        return None
+
+    data_set = data_set.iloc[2:].copy()
+    data_set.columns = data_set.columns.get_level_values(0)
+    data_set = data_set.reset_index(drop=True)
+
+    data_set = data_set.drop(labels='Price', axis=1)
+    data_set.columns = ['Close', 'High', 'Low', 'Open', 'Volume']
+    data_set = data_set.apply(pd.to_numeric, errors="coerce").dropna()
+    return data_set
+
+def pull_yf(ticker, time_period='1y'):
+    """
+    Fetches stock data from yfinance api
+    Reformats table to match desired form for
+    train_model
+    """
+    data_set = yf.download(ticker, period=time_period)
+    data_set = data_set.reset_index(drop=True)
+
+    if len(data_set) < 10:
+        return None
+
+    data_set.columns = data_set.columns.get_level_values(0)
+    data_set.columns = ['Close', 'High', 'Low', 'Open', 'Volume']
+
+    data_set = data_set.apply(pd.to_numeric, errors="coerce").dropna()
+    return data_set

@@ -3,7 +3,7 @@ Base main testing
 """
 import warnings
 import yfinance as yf
-from markettesting.stock_model import StockModel
+from markettesting.models import StockModel
 from markettesting.formatting import flatten_from_yf
 
 warnings.filterwarnings('ignore')

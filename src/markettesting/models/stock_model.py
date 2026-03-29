@@ -11,6 +11,7 @@ from keras.layers import LSTM, Dense, Dropout
 from keras.callbacks import EarlyStopping
 from sklearn.preprocessing import StandardScaler
 from markettesting.config import BASE_DIRECTORY, DATA_FOLDER_DIR, TICKER_DIR
+from markettesting.formatting import pull_csv, pull_yf
 
 class StockModel:
     """
@@ -80,12 +81,12 @@ class StockModel:
         for ticker in tickerList:
             print(f"CURRENT TICKER {ticker}")
             if use_download:
-                ticker_data = self.pull_csv(ticker)
+                ticker_data = pull_csv(ticker)
                 if ticker_data is None:
                     print(f"create_scaler : {ticker}.csv does not exist! Skipping")
                     continue
             else:
-                ticker_data = self.pull_yf(ticker, period=self.time_period)
+                ticker_data = pull_yf(ticker, time_period=self.time_period)
 
             if self.check_invalid_ticker(ticker, ticker_data):
                 print("Skipping...")
@@ -142,41 +143,6 @@ class StockModel:
 
         return np.array(x_list), np.array(y_list)
 
-    def pull_csv(self, ticker, main_dir=DATA_FOLDER_DIR):
-        """Pulls downloaded stock data in .csv format"""
-        csv_dir = main_dir / f"{ticker}.csv"
-        if os.path.exists(csv_dir):
-            data_set = pd.read_csv(csv_dir)
-        else:
-            return None
-
-        data_set = data_set.iloc[2:].copy()
-        data_set.columns = data_set.columns.get_level_values(0)
-        data_set = data_set.reset_index(drop=True)
-
-        data_set = data_set.drop(labels='Price', axis=1)
-        data_set.columns = ['Close', 'High', 'Low', 'Open', 'Volume']
-        data_set = data_set.apply(pd.to_numeric, errors="coerce").dropna()
-        return data_set
-
-    def pull_yf(self, ticker):
-        """
-        Fetches stock data from yfinance api
-        Reformats table to match desired form for
-        train_model
-        """
-        data_set = yf.download(ticker, period=self.time_period)
-        data_set = data_set.reset_index(drop=True)
-
-        if len(data_set) < 10:
-            return None
-
-        data_set.columns = data_set.columns.get_level_values(0)
-        data_set.columns = ['Close', 'High', 'Low', 'Open', 'Volume']
-
-        data_set = data_set.apply(pd.to_numeric, errors="coerce").dropna()
-        return data_set
-
     def check_invalid_ticker(self, ticker, raw_data):
         if raw_data is None or len(raw_data) < 100:
             print(f"Ticker {ticker} is too small or doesn't exist")
@@ -207,9 +173,9 @@ class StockModel:
             print(f'     Current Ticker: {ticker}')
 
             if use_download:
-                raw_data = self.pull_csv(ticker)
+                raw_data = pull_csv(ticker)
             else:
-                raw_data = self.pull_yf(ticker)
+                raw_data = pull_yf(ticker, time_period=self.time_period)
             
             if raw_data is None:
                 print(f"{ticker} not found!")
