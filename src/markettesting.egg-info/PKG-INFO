@@ -1,0 +1,14 @@
+Metadata-Version: 2.4
+Name: markettesting
+Version: 0.0.1
+Summary: Stock Market Training
+Requires-Python: >=3.1
+Requires-Dist: pandas>=1.0.0
+Requires-Dist: tensorflow>=1.0.0
+Requires-Dist: yfinance>=0.2.66
+Requires-Dist: numpy>=1.22.0
+Requires-Dist: yfinance>=0.2.66
+Requires-Dist: matplotlib>=3.7.0
+Provides-Extra: dev
+Requires-Dist: pylint; extra == "dev"
+Requires-Dist: pytest; extra == "dev"
