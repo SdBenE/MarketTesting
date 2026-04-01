@@ -67,7 +67,7 @@ class StockModel:
         #Layer 3
         self.model.add(LSTM(units=self.units, return_sequences=False))
 
-        self.model.add(Dense(units=1))
+        self.model.add(Dense(self.num_features))
 
         self.model.compile(optimizer='adam', loss='mean_squared_error')
 
@@ -96,15 +96,10 @@ class StockModel:
         
         comp_data_list = pd.concat(comp_data_list, ignore_index=True)
         
-        #TODO: Remove before use
-        print(comp_data_list.dtypes)
-        print(comp_data_list.head())
-        print(comp_data_list.describe())
-        
         self.scaler.fit(comp_data_list)
         pickle.dump(self.scaler, open(BASE_DIRECTORY / dump_location, "wb"))
 
-    def get_prediction(self, input_data):
+    def get_prediction(self, input_data, return_close=False):
         """Getter for predictions"""
         # if input_data.shape() != (self.sequence_length,1,self.num_features): #TODO: Add thrower for invalid shape
         #     raise ValueError("get_prediction: Incorrect sequence_length")
@@ -112,19 +107,15 @@ class StockModel:
         #SCALE AND RESHAPE TO TENSOR
         scaled_input = self.scaler.transform(input_data)
         scaled_input = np.expand_dims(scaled_input, 0)
-        
+
         #PREDICT
         scaled_prediction = self.model.predict(scaled_input)
         print("Scaled prediction", scaled_prediction)
-
-        print("Scaler mean", self.scaler.mean_)
-        print("Scaler scale", self.scaler.scale_)
-
-        #FIT WITH DUMMY, DESCALE
-        placeholder = np.zeros((1,5))
-        placeholder[0,0] = scaled_prediction
-        print(placeholder)
-        return self.scaler.inverse_transform(placeholder)[0,0]
+        if return_close:
+            unscaled_prediction = self.scaler.inverse_transform(scaled_prediction)
+            return unscaled_prediction[0,0]
+        else:
+            return self.scaler.inverse_transform(scaled_prediction)
     
     def data_sequence(self, training_data):
         """
@@ -138,7 +129,7 @@ class StockModel:
         for j in range(self.sequence_length, len(training_data)):
             x_list.append(training_data.iloc[i:j])
 
-            y_list.append(training_data.at[j, 'Close']) #Adds the following day to it
+            y_list.append(training_data.iloc[j]) #TODO: Remove if fails
             i+=1
 
         return np.array(x_list), np.array(y_list)
@@ -156,15 +147,55 @@ class StockModel:
         else:
             return False
 
+    def train_model_single_set(self, ticker, raw_data, use_single_download=True, save_dir="StockModel", batch_size=128):
+        """
+        Single-ticker model preprocessing and data push-through
+        """
+        if raw_data is None:
+            print(f"{ticker} not found!")
+            print("Skipping...")
+            #Exit training w/ this ticker if conditions not met
+            return None
+
+        raw_data = raw_data.apply(pd.to_numeric, errors='coerce').dropna()
+
+        if self.check_invalid_ticker(ticker, raw_data):
+            print("Skipping...")
+            #Exit training w/ this ticker if conditions not met
+            return
+
+        #SCALING
+        scaled_data = self.scaler.transform(raw_data)
+        scaled_data = pd.DataFrame(scaled_data, columns=raw_data.columns)
+
+        #WINDOWING
+        x_full, y_full = self.data_sequence(scaled_data)
+
+        #SPLITTING DATA
+        split_index = int(0.8 * len(y_full)) #Integer casting for proper index
+
+        x_train = x_full[:split_index]
+        y_train = y_full[:split_index]
+        x_test = x_full[split_index+1:]
+        y_test = y_full[split_index+1:]
+
+        self.model.fit(
+            x_train,
+            y_train,
+            epochs=self.epochs,
+            batch_size=batch_size,
+            callbacks=[self.early_stop_system],
+            validation_data=(x_test, y_test)
+        )
+
+        self.model.save(BASE_DIRECTORY / f'{save_dir}.keras')
+
     def train_model(self, use_download=True, save_dir="StockModel", batch_size=128):
         """
         StockModel preprocessing and data push-through
         """
         if self.scaler == None:
-            if use_download:
-                self.create_scaler(use_download=use_download)
-            else:
-                self.import_pickle_scaler()
+            self.create_scaler(use_download=use_download)
 
         data_list = pd.read_csv(TICKER_DIR)
         data_list = data_list['Symbol']
@@ -176,40 +207,11 @@ class StockModel:
                 raw_data = pull_csv(ticker)
             else:
                 raw_data = pull_yf(ticker, time_period=self.time_period)
-            
-            if raw_data is None:
-                print(f"{ticker} not found!")
-                print("Skipping...")
-                continue
 
-            raw_data = raw_data.apply(pd.to_numeric, errors='coerce').dropna()
-
-            if self.check_invalid_ticker(ticker, raw_data):
-                print("Skipping...")
-                continue
-
-            #SCALING
-            scaled_data = self.scaler.transform(raw_data)
-            scaled_data = pd.DataFrame(scaled_data, columns=raw_data.columns)
-
-            #WINDOWING
-            x_full, y_full = self.data_sequence(scaled_data)
-
-            #SPLITTING DATA
-            split_index = int(0.8 * len(y_full)) #Integer casting for proper index
-
-            x_train = x_full[:split_index]
-            y_train = y_full[:split_index]
-            x_test = x_full[split_index+1:]
-            y_test = y_full[split_index+1:]
-
-            self.model.fit(
-                x_train,
-                y_train,
-                epochs=self.epochs,
-                batch_size=batch_size,
-                callbacks=[self.early_stop_system],
-                validation_data=(x_test, y_test)
+            self.train_model_single_set(ticker,
+                                        raw_data,
+                                        use_single_download=use_download,
+                                        save_dir=save_dir,
+                                        batch_size=batch_size
             )
-
-            self.model.save(BASE_DIRECTORY / f'{save_dir}.keras')
+            
