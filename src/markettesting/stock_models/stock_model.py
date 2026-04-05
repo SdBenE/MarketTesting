@@ -110,7 +110,6 @@ class StockModel:
 
         #PREDICT
         scaled_prediction = self.model.predict(scaled_input)
-        print("Scaled prediction", scaled_prediction)
         if return_close:
             unscaled_prediction = self.scaler.inverse_transform(scaled_prediction)
             return unscaled_prediction[0,0]
