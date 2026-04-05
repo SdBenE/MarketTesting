@@ -1,0 +1,1 @@
+from markettesting.stock_models.stock_model import StockModel
