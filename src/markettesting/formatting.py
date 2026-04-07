@@ -8,7 +8,7 @@ import yfinance as yf
 import pandas as pd
 from markettesting.config import DATA_FOLDER_DIR, TICKER_DIR
 
-def file_formation(period_years=1, download=False):
+def file_formation(period_years=1, download=True):
     """
     Retrive training files for use in model training
     """
@@ -17,17 +17,26 @@ def file_formation(period_years=1, download=False):
     print(data_list)
     symbols = data_list['Symbol']
 
-
-    duration = f"{period_years}y"
+    if (period_years == "max"):
+        duration = "max"    
+    elif (int(period_years) == period_years):
+        duration = f"{period_years}y"
+    else:
+        raise(ValueError, "Incorrect format for period_years")
 
     # emptyTickers = []
 
     # if not os.path.exists("/MarketTesting/src/markettesting/dataFolder"):
     #     os.makedirs("/MarketTesting/src/markettesting/dataFolder", exist_ok=True)
 
-    for ticker in symbols:
+    for x in range(0, len(symbols)):
+        ticker = symbols.iloc[x]
+
         if os.path.exists(DATA_FOLDER_DIR / f'{ticker}.csv'):
             print(f'File {ticker}.csv already exists! Skipping...')
+            continue
+        if x <= len(symbols) - 1 and os.path.exists(DATA_FOLDER_DIR / f'{symbols.iloc[x + 1]}.csv'):
+            print(f'file {symbols.iloc[x + 1]}.csv intentionally skipped due to size! Skipping...')
             continue
 
         print(f"      CURRENT TICKER {ticker}      ")
