@@ -10,6 +10,7 @@ from matplotlib import pyplot
 
 class DataLog:
     def __init__(self, model, ticker_name, use_download=False, time_period='10y'):
+        """Base Constructor for the DataLog class for one ticker with one model"""
         self.core_model = model
         self.ticker_name = ticker_name
         self.prediction_table = pd.DataFrame()
@@ -21,10 +22,10 @@ class DataLog:
             self.base_data = flatten_from_yf(self.base_data)
     
     def determine_prediction_set(self, days=90):
+        """Creates the prediction_table with self.base_data"""
 
         #reduction to the number of days is necessary due to
         #extensive runtime with larger base datasets
-
         comp_data_table = np.empty((self.core_model.sequence_length + days, self.base_data.shape[1]))
         comp_data_table[:self.core_model.sequence_length] = self.base_data.iloc[-(self.core_model.sequence_length):]
         comp_data_table = pd.DataFrame(comp_data_table, columns=self.base_data.columns)
@@ -39,7 +40,7 @@ class DataLog:
                 ),
                 columns=comp_data_table.columns
             )
-        
+
         self.prediction_table = comp_data_table.iloc[-days:]
         print(comp_data_table.head)
         print(self.prediction_table.head)

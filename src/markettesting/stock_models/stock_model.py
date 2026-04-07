@@ -9,7 +9,7 @@ import pickle
 from keras.models import Sequential, load_model
 from keras.layers import LSTM, Dense, Dropout
 from keras.callbacks import EarlyStopping
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import RobustScaler
 from markettesting.config import BASE_DIRECTORY, DATA_FOLDER_DIR, TICKER_DIR
 from markettesting.formatting import pull_csv, pull_yf
 
@@ -24,7 +24,7 @@ class StockModel:
         self.time_period = time_period
         self.model = Sequential()
         self.epochs = 25
-        self.units = 1000
+        self.units = 100
         self.num_features = num_features
         self.sequence_length = sequence_length
         self.scaler = None
@@ -38,8 +38,9 @@ class StockModel:
 
         self.early_stop_system = EarlyStopping(
             monitor='val_loss',
-            patience=5,
-            restore_best_weights=True
+            patience=3,
+            restore_best_weights=True,
+            min_delta=0.0001
         )
 
     def import_model(self, model_directory="StockModel.keras"):
@@ -61,18 +62,15 @@ class StockModel:
         self.model.add(Dropout(0.2))
 
         #Layer 2
-        self.model.add(LSTM(units=self.units, return_sequences=True))
-        self.model.add(Dropout(0.2))
-
-        #Layer 3
         self.model.add(LSTM(units=self.units, return_sequences=False))
+        self.model.add(Dropout(0.2))
 
         self.model.add(Dense(self.num_features))
 
         self.model.compile(optimizer='adam', loss='mean_squared_error')
 
     def create_scaler(self, use_download=False, dump_location="StockModel.pkl"):
-        self.scaler = StandardScaler()
+        self.scaler = RobustScaler()
         tickerList = pd.read_csv(TICKER_DIR)
         tickerList = tickerList['Symbol']
 
@@ -101,8 +99,6 @@ class StockModel:
 
     def get_prediction(self, input_data, return_close=False):
         """Getter for predictions"""
-        # if input_data.shape() != (self.sequence_length,1,self.num_features): #TODO: Add thrower for invalid shape
-        #     raise ValueError("get_prediction: Incorrect sequence_length")
 
         #SCALE AND RESHAPE TO TENSOR
         scaled_input = self.scaler.transform(input_data)
@@ -177,6 +173,13 @@ class StockModel:
         y_train = y_full[:split_index]
         x_test = x_full[split_index+1:]
         y_test = y_full[split_index+1:]
+
+        print(f"X training range: {x_train.min()} to {x_train.max()}")
+        print(f"Y training range: {y_train.min()} to {y_train.max()}")
+
+        if (np.abs(x_train).max() > 10):
+            print(f"Scaled data for {ticker} is too large!!")
+            return
 
         self.model.fit(
             x_train,
