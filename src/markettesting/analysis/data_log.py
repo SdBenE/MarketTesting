@@ -34,12 +34,14 @@ class DataLog:
             #Use last sequence_length units
             print(f"Datalog: Testing {self.ticker_name} on day {i + 1}")
 
-            comp_data_table.iloc[self.core_model.sequence_length + i] = pd.DataFrame(
-                self.core_model.get_prediction(
-                comp_data_table.iloc[i: self.core_model.sequence_length + i]
-                ),
+            prediction_slice = self.core_model.get_prediction(
+                self.ticker_name, 
+                comp_data_table.iloc[i: self.core_model.sequence_length + i],
                 columns=comp_data_table.columns
             )
+            
+            prediction_slice = pd.DataFrame(prediction_slice)
+            comp_data_table.iloc[self.core_model.sequence_length + i] = prediction_slice
 
         self.prediction_table = comp_data_table.iloc[-days:]
         print(comp_data_table.head)

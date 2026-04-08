@@ -12,6 +12,7 @@ from keras.callbacks import EarlyStopping
 from sklearn.preprocessing import RobustScaler
 from markettesting.config import BASE_DIRECTORY, DATA_FOLDER_DIR, TICKER_DIR
 from markettesting.formatting import pull_csv, pull_yf
+from markettesting.stock_models.loss_callback import LossCallback
 
 class StockModel:
     """
@@ -70,11 +71,9 @@ class StockModel:
         self.model.compile(optimizer='adam', loss='mean_squared_error')
 
     def create_scaler(self, use_download=False, dump_location="StockModel.pkl"):
-        self.scaler = RobustScaler()
+        self.scaler_dict = {}
         tickerList = pd.read_csv(TICKER_DIR)
         tickerList = tickerList['Symbol']
-
-        comp_data_list = []
 
         for ticker in tickerList:
             print(f"CURRENT TICKER {ticker}")
@@ -90,18 +89,17 @@ class StockModel:
                 print("Skipping...")
                 continue
 
-            comp_data_list.append(ticker_data)
+            scaler_arg = RobustScaler()
+            scaler_arg.fit(ticker_data)
+            self.scaler_dict[ticker] = scaler_arg
         
-        comp_data_list = pd.concat(comp_data_list, ignore_index=True)
-        
-        self.scaler.fit(comp_data_list)
-        pickle.dump(self.scaler, open(BASE_DIRECTORY / dump_location, "wb"))
+        pickle.dump(self.scaler_dict, open(BASE_DIRECTORY / dump_location, "wb"))
 
-    def get_prediction(self, input_data, return_close=False):
+    def get_prediction(self, ticker, input_data, return_close=False):
         """Getter for predictions"""
 
         #SCALE AND RESHAPE TO TENSOR
-        scaled_input = self.scaler.transform(input_data)
+        scaled_input = self.scaler_dict[ticker].transform(input_data)
         scaled_input = np.expand_dims(scaled_input, 0)
 
         #PREDICT
@@ -160,7 +158,8 @@ class StockModel:
             return
 
         #SCALING
-        scaled_data = self.scaler.transform(raw_data)
+        scaler = self.scaler_dict[ticker]
+        scaled_data = scaler.transform(raw_data)
         scaled_data = pd.DataFrame(scaled_data, columns=raw_data.columns)
 
         #WINDOWING
@@ -177,20 +176,20 @@ class StockModel:
         print(f"X training range: {x_train.min()} to {x_train.max()}")
         print(f"Y training range: {y_train.min()} to {y_train.max()}")
 
-        if (np.abs(x_train).max() > 10):
+        if (np.abs(x_train).max() > 50):
             print(f"Scaled data for {ticker} is too large!!")
             return
+        
+        callback = LossCallback(ticker, 10.0)
 
         self.model.fit(
             x_train,
             y_train,
             epochs=self.epochs,
             batch_size=batch_size,
-            callbacks=[self.early_stop_system],
+            callbacks=[self.early_stop_system, callback],
             validation_data=(x_test, y_test)
         )
-
-        self.model.save(BASE_DIRECTORY / f'{save_dir}.keras')
 
     def train_model(self, use_download=True, save_dir="StockModel", batch_size=128):
         """
@@ -216,4 +215,4 @@ class StockModel:
                                         save_dir=save_dir,
                                         batch_size=batch_size
             )
-            
+        self.model.save(BASE_DIRECTORY / f'{save_dir}.keras')

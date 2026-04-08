@@ -1,1 +1,2 @@
 from markettesting.stock_models.stock_model import StockModel
+from markettesting.stock_models.loss_callback import LossCallback
