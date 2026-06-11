@@ -1,9 +1,8 @@
 README.md
 pyproject.toml
+src/markettesting/__init__.py
 src/markettesting/config.py
 src/markettesting/formatting.py
-src/markettesting/main.py
-src/markettesting/stock_model.py
 src/markettesting.egg-info/PKG-INFO
 src/markettesting.egg-info/SOURCES.txt
 src/markettesting.egg-info/dependency_links.txt
