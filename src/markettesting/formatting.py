@@ -71,7 +71,7 @@ def flatten_from_yf(data_set):
 
     return data_set
 
-def pull_csv(ticker, main_dir=DATA_FOLDER_DIR):
+def pull_ticker_csv(ticker, main_dir=DATA_FOLDER_DIR):
     """Pulls downloaded stock data in .csv format"""
     csv_dir = main_dir / f"{ticker}.csv"
     if os.path.exists(csv_dir):
@@ -105,3 +105,16 @@ def pull_yf(ticker, time_period='1y'):
 
     data_set = data_set.apply(pd.to_numeric, errors="coerce").dropna()
     return data_set
+
+def check_invalid_ticker(ticker, raw_data):
+    if raw_data is None or len(raw_data) < 100:
+        print(f"Ticker {ticker} is too small or doesn't exist")
+        return True
+    if raw_data['Close'].median() > 500:
+        print(f"Closing prices for {ticker} are extremely high, likely index")
+        return True
+    if raw_data['Close'].std() > 500:
+        print(f"Price variance for {ticker} are extremely high")
+        return True
+    else:
+        return False

@@ -11,7 +11,8 @@ from keras.layers import LSTM, Dense, Dropout
 from keras.callbacks import EarlyStopping
 from sklearn.preprocessing import RobustScaler
 from markettesting.config import BASE_DIRECTORY, DATA_FOLDER_DIR, TICKER_DIR
-from markettesting.formatting import pull_csv, pull_yf
+from markettesting.formatting import pull_ticker_csv, pull_yf, check_invalid_ticker
+from markettesting.stock_models.scalers import create_ticker_scaler
 
 class StockModel:
     """
@@ -69,34 +70,6 @@ class StockModel:
 
         self.model.compile(optimizer='adam', loss='mean_squared_error')
 
-    def create_scaler(self, use_download=False, dump_location="StockModel.pkl"):
-        self.scaler = RobustScaler()
-        tickerList = pd.read_csv(TICKER_DIR)
-        tickerList = tickerList['Symbol']
-
-        comp_data_list = []
-
-        for ticker in tickerList:
-            print(f"CURRENT TICKER {ticker}")
-            if use_download:
-                ticker_data = pull_csv(ticker)
-                if ticker_data is None:
-                    print(f"create_scaler : {ticker}.csv does not exist! Skipping")
-                    continue
-            else:
-                ticker_data = pull_yf(ticker, time_period=self.time_period)
-
-            if self.check_invalid_ticker(ticker, ticker_data):
-                print("Skipping...")
-                continue
-
-            comp_data_list.append(ticker_data)
-        
-        comp_data_list = pd.concat(comp_data_list, ignore_index=True)
-        
-        self.scaler.fit(comp_data_list)
-        pickle.dump(self.scaler, open(BASE_DIRECTORY / dump_location, "wb"))
-
     def get_prediction(self, input_data, return_close=False):
         """Getter for predictions"""
 
@@ -129,19 +102,6 @@ class StockModel:
 
         return np.array(x_list), np.array(y_list)
 
-    def check_invalid_ticker(self, ticker, raw_data):
-        if raw_data is None or len(raw_data) < 100:
-            print(f"Ticker {ticker} is too small or doesn't exist")
-            return True
-        if raw_data['Close'].median() > 500:
-            print(f"Closing prices for {ticker} are extremely high, likely index")
-            return True
-        if raw_data['Close'].std() > 500:
-            print(f"Price variance for {ticker} are extremely high")
-            return True
-        else:
-            return False
-
     def train_model_single_set(self, ticker, raw_data, use_single_download=True, save_dir="StockModel", batch_size=128):
         """
         Single-ticker model preprocessing and data push-through
@@ -154,7 +114,7 @@ class StockModel:
 
         raw_data = raw_data.apply(pd.to_numeric, errors='coerce').dropna()
 
-        if self.check_invalid_ticker(ticker, raw_data):
+        if check_invalid_ticker(ticker, raw_data):
             print("Skipping...")
             #Exit training w/ this ticker if conditions not met
             return
@@ -197,7 +157,7 @@ class StockModel:
         StockModel preprocessing and data push-through
         """
         if self.scaler == None:
-            self.create_scaler(use_download=use_download)
+            self.scaler = create_ticker_scaler(time_period=self.time_period, use_download=use_download)
 
         data_list = pd.read_csv(TICKER_DIR)
         data_list = data_list['Symbol']
@@ -206,7 +166,7 @@ class StockModel:
             print(f'     Current Ticker: {ticker}')
 
             if use_download:
-                raw_data = pull_csv(ticker)
+                raw_data = pull_ticker_csv(ticker)
             else:
                 raw_data = pull_yf(ticker, time_period=self.time_period)
 
