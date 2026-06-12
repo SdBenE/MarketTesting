@@ -176,4 +176,3 @@ class StockModel:
                                         save_dir=save_dir,
                                         batch_size=batch_size
             )
-            

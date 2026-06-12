@@ -6,7 +6,7 @@ import time
 import os
 import yfinance as yf
 import pandas as pd
-from markettesting.config import DATA_FOLDER_DIR, TICKER_DIR
+from markettesting.config import DATA_FOLDER_DIR, TICKER_DIR, EXTERNAL_FACTORS_DIR
 
 def file_formation(period_years=1, download=True):
     """
@@ -17,12 +17,7 @@ def file_formation(period_years=1, download=True):
     print(data_list)
     symbols = data_list['Symbol']
 
-    if (period_years == "max"):
-        duration = "max"    
-    elif (int(period_years) == period_years):
-        duration = f"{period_years}y"
-    else:
-        raise(ValueError, "Incorrect format for period_years")
+    duration = config_period_years(period_years)
 
     # emptyTickers = []
 
@@ -62,6 +57,35 @@ def file_formation(period_years=1, download=True):
         # print(temp_data_list)
 
     temp_data_list.to_csv(TICKER_DIR)
+
+def volatility_file_formation(period_years='max', overwrite=True, download=True, filename='VIX_VOL'):
+    """Pulls volatility data from ^VIX in yfinance"""
+    
+    duration = config_period_years(period_years)
+
+    print(f"      DOWNLOADING ^VIX VOLATILITY DATA      ")
+
+    #Exit if VIX is not going to be overwritten
+    if os.path.exists(DATA_FOLDER_DIR / f'{filename}.csv') and overwrite == False:
+        print(f'file VIX_VOL already exists and won\'t be overwritten!')
+        print('Skipping...')
+        return        
+    start = time.perf_counter()
+    data = yf.download('^VIX', period=duration)
+    
+    if download:
+        data.to_csv(EXTERNAL_FACTORS_DIR / f'{filename}.csv')
+    
+
+def config_period_years(period_years):
+    if (period_years == "max"):
+        duration = "max"    
+    elif (int(period_years) == period_years):
+        duration = f"{period_years}y"
+    else:
+        raise(ValueError, "Incorrect format for period_years")
+    
+    return duration
 
 def flatten_from_yf(data_set):
     """Flattens data to a format acceptable for StockModel-based models"""
