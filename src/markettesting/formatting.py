@@ -95,9 +95,15 @@ def flatten_from_yf(data_set):
 
     return data_set
 
-def pull_ticker_csv(ticker, main_dir=DATA_FOLDER_DIR):
+def pull_data_csv(factor_type, factor_name=None):
     """Pulls downloaded stock data in .csv format"""
-    csv_dir = main_dir / f"{ticker}.csv"
+    if factor_type.lower() == 'ticker':
+        csv_dir = DATA_FOLDER_DIR / f"{factor_name}.csv"
+    elif factor_type.lower() == 'volatility':
+        csv_dir = EXTERNAL_FACTORS_DIR / f"VIX_VOL.csv"
+    else:
+        raise(ValueError, f"Invalid request for csv data. Received {factor_type}")
+
     if os.path.exists(csv_dir):
         data_set = pd.read_csv(csv_dir)
     else:

@@ -11,7 +11,7 @@ from keras.layers import LSTM, Dense, Dropout
 from keras.callbacks import EarlyStopping
 from sklearn.preprocessing import RobustScaler
 from markettesting.config import BASE_DIRECTORY, DATA_FOLDER_DIR, TICKER_DIR
-from markettesting.formatting import pull_ticker_csv, pull_yf, check_invalid_ticker
+from markettesting.formatting import pull_data_csv, pull_yf, check_invalid_ticker
 from markettesting.stock_models.scalers import create_ticker_scaler
 
 class StockModel:
@@ -166,7 +166,7 @@ class StockModel:
             print(f'     Current Ticker: {ticker}')
 
             if use_download:
-                raw_data = pull_ticker_csv(ticker)
+                raw_data = pull_data_csv('ticker', ticker)
             else:
                 raw_data = pull_yf(ticker, time_period=self.time_period)
 

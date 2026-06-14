@@ -2,7 +2,7 @@ import pandas as pd
 import pickle
 from sklearn.preprocessing import RobustScaler
 from markettesting.config import TICKER_DIR, BASE_DIRECTORY
-from markettesting.formatting import pull_ticker_csv, pull_yf, check_invalid_ticker
+from markettesting.formatting import pull_data_csv, pull_yf, check_invalid_ticker
 
 
 def create_ticker_scaler(time_period, use_download=False, dump_location="StockModel.pkl"):
@@ -15,7 +15,7 @@ def create_ticker_scaler(time_period, use_download=False, dump_location="StockMo
     for ticker in tickerList:
         print(f"CURRENT TICKER {ticker}")
         if use_download:
-            ticker_data = pull_ticker_csv(ticker)
+            ticker_data = pull_data_csv('ticker', ticker)
             if ticker_data is None:
                 print(f"create_scaler : {ticker}.csv does not exist! Skipping")
                 continue

@@ -3,7 +3,7 @@ DataLog: ML model prediction tracking
 """
 import pandas as pd
 import numpy as np
-from markettesting.formatting import pull_ticker_csv, pull_yf
+from markettesting.formatting import pull_data_csv, pull_yf
 from markettesting.stock_models import StockModel
 from markettesting.formatting import flatten_from_yf
 from matplotlib import pyplot
@@ -16,7 +16,7 @@ class DataLog:
         self.prediction_table = pd.DataFrame()
 
         if use_download:
-            self.base_data = pull_ticker_csv(ticker=ticker_name)
+            self.base_data = pull_data_csv('ticker', factor_name=ticker_name)
         else:
             self.base_data = pull_yf(ticker=ticker_name, time_period=time_period)
             self.base_data = flatten_from_yf(self.base_data)
